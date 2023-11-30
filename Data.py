@@ -208,7 +208,7 @@ class ClipDataModule(BaseDataModule):
         self.shot = shot
 
         # initialize the CLIP model and get the embedding dimension
-        encode, _ = clip.load('ViT-B/32', device='cpu')
+        encode, _ = clip.load('ViT-B/32')
         self.encode = encode.encode_image
         self.embedding_dim = encode.visual.output_dim
 

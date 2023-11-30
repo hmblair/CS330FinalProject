@@ -30,7 +30,7 @@ if args.dataset == 'imagenet-tiny':
     download_imagenet_tiny()
     data_path = os.path.join('Data', 'imagenet-tiny')
 elif args.dataset == 'omniglot':
-    warnings.warn('There is no downloader for omniglot yet.')
+    warnings.warn('There is no downloader for omniglot.')
     data_path = os.path.join('Data', 'omniglot_resized')
 else: 
     raise ValueError(f'Invalid dataset name {args.dataset}')
