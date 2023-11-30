@@ -6,8 +6,10 @@ from Data import ClipDataModule
 import os
 import warnings
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 parser = argparse.ArgumentParser(prog='Scalable In-Context Meta-Learning')
+parser.add_argument('--model', type=str)
 parser.add_argument('--max_epochs', type=int)
 parser.add_argument('--learning_rate', type=float)
 parser.add_argument('--num_layers', type=int)
@@ -20,9 +22,26 @@ parser.add_argument('--dataset', type=str)
 parser.add_argument('--accelerator', type=str, default='gpu')
 args = parser.parse_args()
 
+def get_model_name(args):
+    """
+    Returns a string summary of the model and its hyperparameters.
+    """
+    return '_'.join(
+        [str(getattr(args, arg)) 
+            for arg in vars(args) 
+            if getattr(args, arg) is not None]
+            )
 
-# initialise the logger
-logger = TensorBoardLogger('lightning_logs', name='ProtoNetICL')
+model_name = get_model_name(args)
+
+# initialise the logger and checkpoint callback
+log_dir = 'lightning_logs'
+logger = TensorBoardLogger(log_dir, name='ProtoNetICL')
+model_checkpoint = ModelCheckpoint(dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
+                                    filename='best',
+                                    monitor='val_loss',
+                                    mode='min',
+                                    save_last=True)
 
 # initialise the trainer
 trainer = pl.Trainer(
@@ -54,13 +73,21 @@ datamodule = ClipDataModule(
     )
 
 # initialise the model
-model = ProtoNetICL(
-    lr=args.learning_rate,
-    num_layers=args.num_layers,
-    num_heads=args.num_heads,
-    hidden_dim=datamodule.embedding_dim,
-    mlp_dim=args.mlp_dim,
-    )
+if args.model == 'ProtoNetICL':
+    model = ProtoNetICL(
+        lr=args.learning_rate,
+        num_layers=args.num_layers,
+        num_heads=args.num_heads,
+        hidden_dim=datamodule.embedding_dim,
+        mlp_dim=args.mlp_dim,
+        )
+elif args.model == 'ProtoNetClip':
+    from Model import ProtoNetClip
+    model = ProtoNetClip(
+        lr=args.learning_rate,
+        )
+else:
+    raise ValueError(f'Invalid model name {args.model}')
 
 # train the model
 trainer.fit(model, datamodule)
