@@ -68,7 +68,7 @@ class BaseICLModel(BaseModel):
         loss = self.objective(logits, labels[:,-1]) # compute the loss for the query
 
         predictions = torch.argmax(logits, dim=1) # compute the predicted classes
-        accuracy = torch.sum(predictions == labels) / torch.numel(labels) # compute the accuracy
+        accuracy = torch.sum(predictions == labels[:,-1]) / torch.numel(labels) # compute the accuracy
 
         return {'loss': loss, 'accuracy': accuracy}
   
@@ -231,8 +231,8 @@ class IntraClassEncoderBlock(nn.Module):
         b,n,k,d = input.shape
         input = input.reshape((b*n,k,d))
         if mask is not None:
-          mask = mask.reshape((b*n,k))
-        out = self.block(input, mask)
+            mask = mask.reshape((k,b*n))    
+        out = self.block(input, src_key_padding_mask=mask)
         return out.reshape((b,n,k,d))
 
 
@@ -261,8 +261,8 @@ class InterClassEncoderBlock(nn.Module):
         b,n,k,d = input.shape
         input = input.reshape((b,n*k,d))
         if mask is not None:
-          mask = mask.reshape((b,n*k))
-        out = self.block(input, mask)
+          mask = mask.reshape((n*k,b))
+        out = self.block(input, src_key_padding_mask=mask)
         if mask is not None:
           return torch.sum(out.reshape((b,n,k,d)), dim=2) / torch.sum(~mask.reshape((b,n,k)), dim=2)[..., None]
         else:
