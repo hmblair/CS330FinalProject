@@ -4,10 +4,7 @@ import argparse
 from Model import ProtoNetICL
 from Data import ClipDataModule
 import os
-
-# get the parent directory
-from os.path import dirname, abspath
-parent_dir = dirname(dirname(abspath(__file__)))
+import warnings
 
 parser = argparse.ArgumentParser(prog='Scalable In-Context Meta-Learning')
 parser.add_argument('--max_epochs', type=int)
@@ -18,6 +15,7 @@ parser.add_argument('--mlp_dim', type=int)
 parser.add_argument('--batch_size', type=int)
 parser.add_argument('--way', type=int)
 parser.add_argument('--shot', type=int)
+parser.add_argument('--dataset', type=str)
 args = parser.parse_args()
 
 # initialise the trainer
@@ -26,7 +24,16 @@ trainer = pl.Trainer(
     precision = '16-mixed',
     )
 
-data_path = os.path.join(parent_dir, 'Data', 'omniglot_resized')
+# get the data path
+if args.dataset == 'imagenet-tiny':
+    from downloader import download_imagenet_tiny
+    download_imagenet_tiny()
+    data_path = os.path.join('Data', 'imagenet-tiny')
+elif args.dataset == 'omniglot':
+    warnings.warn('There is no downloader for omniglot yet.')
+    data_path = os.path.join('Data', 'omniglot_resized')
+else: 
+    raise ValueError(f'Invalid dataset name {args.dataset}')
 
 # initialise the data module
 datamodule = ClipDataModule(
