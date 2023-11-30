@@ -1,1 +1,1 @@
-Scalable In-Context Meta-Learning
+Scalable In-Context Meta-Learning. Run with run.sh.
