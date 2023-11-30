@@ -71,7 +71,7 @@ class BaseICLModel(BaseModel):
         accuracy = torch.sum(predictions == labels[:,-1]) / torch.numel(labels) # compute the accuracy
 
         return {'loss': loss, 'accuracy': accuracy}
-  
+
 
     def _get_inputs_and_outputs(self, batch: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
@@ -122,7 +122,7 @@ class ProtoNet(BaseICLModel):
             torch.Tensor: The ProtoNet logits.
         """
         query = prototypes[:, -1] # the query is the last element of each batch
-        classes = prototypes[:, 1:] # the classes are all but the last element of each batch
+        classes = prototypes[:, :-1] # the classes are all but the last element of each batch
         return -torch.sum( (query[:, None] - classes) ** 2, dim = -1) # compute the negative squared distances between the query and each class
 
 

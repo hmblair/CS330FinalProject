@@ -17,6 +17,7 @@ parser.add_argument('--batch_size', type=int)
 parser.add_argument('--way', type=int)
 parser.add_argument('--shot', type=int)
 parser.add_argument('--dataset', type=str)
+parser.add_argument('--accelerator', type=str, default='gpu')
 args = parser.parse_args()
 
 
@@ -25,8 +26,9 @@ logger = TensorBoardLogger('lightning_logs', name='ProtoNetICL')
 
 # initialise the trainer
 trainer = pl.Trainer(
+    accelerator = args.accelerator,
     max_epochs = args.max_epochs,
-    precision = '16-mixed',
+    precision = '16-mixed' if args.accelerator == 'gpu' else '32',
     logger = logger,
     )
 
