@@ -314,6 +314,6 @@ class InterLeavedEncoderBlock(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, way, shot, feature_dim).
         """
         x = self.intra_block(input, mask)
-        y = self.inter_block(x, mask)[:, :, None, :]
-        return x + y
+        y = self.inter_block(x, mask)
+        return x + y[:, :, None, :]
   
