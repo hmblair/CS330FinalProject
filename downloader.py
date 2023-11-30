@@ -14,7 +14,7 @@ def downloader_with_progress(url, filename):
     response = requests.get(url, stream=True)
     total_size_in_bytes= int(response.headers.get('content-length', 0))
     block_size = 1024 #1 Kibibyte
-    progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+    progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True, desc=f'Downloading {filename}')
     with open(filename, 'wb') as file:
         for data in response.iter_content(block_size):
             progress_bar.update(len(data))
@@ -33,6 +33,7 @@ def download_imagenet_tiny():
     
     # extract the dataset
     if not os.path.exists('Data/tiny-imagenet-200'):
+        print(f'Extracting {zipped_file}')
         with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
             zip_ref.extractall('Data/')
     
