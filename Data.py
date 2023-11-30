@@ -10,6 +10,7 @@ from PIL import Image
 
 from base import BaseDataModule
 from random import shuffle
+from distributed_helper import distributed_breakpoint
 
 
 class MetaLearningClipIterableDataset(IterableDataset):
@@ -55,6 +56,19 @@ class MetaLearningClipIterableDataset(IterableDataset):
         # load the clip preprocessing function
         _, preprocess = clip.load("ViT-B/32") 
         self.preprocess = preprocess
+    
+
+    def _get_worker_info(self) -> tuple[int, int]:
+        """
+        Gets the id of the current worker and the total number of workers.
+
+        Returns:
+            tuple[int, int]: The id of the current worker and the total number of workers.
+        """
+        worker_info = torch.utils.data.get_worker_info()
+        worker_id = (0 if worker_info is None else worker_info.id)
+        num_workers = (1 if worker_info is None else worker_info.num_workers)
+        return worker_id, num_workers
 
 
     def load_and_preprocess(self, path : str) -> torch.Tensor:
@@ -121,6 +135,8 @@ class MetaLearningClipIterableDataset(IterableDataset):
         Returns:
             Iterable: The data iterator.
         """
+        worker_id, num_workers = self._get_worker_info()
+        self.data_folders = self.data_folders[worker_id::num_workers] # split the data folders across the workers
         while True:
             yield self._sample()
 
@@ -134,8 +150,7 @@ class MetaLearningClipIterableDataset(IterableDataset):
         """
         # get the number of workers; we need to scale the length by this since each worker will
         # increment the iterator by one
-        worker_info = torch.utils.data.get_worker_info()
-        num_workers = 1 if worker_info is None else worker_info.num_workers
+        num_workers, _ = self._get_worker_info()
 
         # calculate the number of files in the dataset
         num_files = sum([len([name for name in os.listdir(path)]) for path in self.data_folders])
@@ -288,7 +303,6 @@ def test():
 
     for batch in train_dataloader:
         batch = datamodule.on_after_batch_transfer(batch, 0)
-        breakpoint()
 
 
 if __name__ == '__main__':
