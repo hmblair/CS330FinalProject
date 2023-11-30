@@ -8,48 +8,9 @@ from schedulers import InverseSqrtLR
 class BaseICLModel(BaseModel):
     """
     Base class for in-context meta-learning models.
-
-    Args:
-        num_layers (int): The number of transformer layers in the model.
-        num_heads (int): The number of attention heads in each transformer.
-        hidden_dim (int): The hidden dimension.
-        mlp_dim (int): The dimensionality of the MLP layers in the transforer layers.
-        dropout (float, optional): The dropout rate. Defaults to 0.0.
-        attention_dropout (float, optional): The dropout rate for attention layers. Defaults to 0.0.
-        *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
-
-    Attributes:
-        hidden_dim (int): The hidden dimension.
-        encoder (Encoder): The transformer encoder module of the model.
-        objective (nn.CrossEntropyLoss): The objective (loss) function.
-
-    Methods:
-        _compute_losses(batch: torch.Tensor) -> dict:
-            Compute the losses and accuracy for a given batch of data.
-
-        _get_inputs_and_outputs(batch: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-            Get the inputs and outputs from a batch. Required for making predictions with the `BaseModel` class.
     """
-    def __init__(self,
-                 num_layers: int,
-                 num_heads: int,
-                 hidden_dim: int,
-                 mlp_dim: int,
-                 dropout: float = 0.0,
-                 attention_dropout: float = 0.0,
-                 *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.hidden_dim = hidden_dim
-        self.encoder = Encoder(
-            num_layers,
-            num_heads,
-            hidden_dim,
-            mlp_dim,
-            dropout,
-            attention_dropout,
-        )
-
         self.objective = nn.CrossEntropyLoss() # the objective (loss) function
 
 
@@ -68,7 +29,7 @@ class BaseICLModel(BaseModel):
         loss = self.objective(logits, labels[:,-1]) # compute the loss for the query
 
         predictions = torch.argmax(logits, dim=1) # compute the predicted classes
-        accuracy = torch.sum(predictions == labels[:,-1]) / torch.numel(labels) # compute the accuracy
+        accuracy = torch.sum(predictions == labels[:,-1]) / torch.numel(predictions) # compute the accuracy
 
         return {'loss': loss, 'accuracy': accuracy}
 
@@ -96,6 +57,52 @@ class BaseICLModel(BaseModel):
             torch.optim.Optimizer: The Adam optimizer object.
         """
         return torch.optim.Adam(self.parameters(), lr=self.lr)
+
+
+
+class BaseICLTransformer(BaseICLModel):
+    """
+    Base class for in-context meta-learning models that use transformers.
+
+    Args:
+        num_layers (int): The number of transformer layers in the model.
+        num_heads (int): The number of attention heads in each transformer.
+        hidden_dim (int): The hidden dimension.
+        mlp_dim (int): The dimensionality of the MLP layers in the transforer layers.
+        dropout (float, optional): The dropout rate. Defaults to 0.0.
+        attention_dropout (float, optional): The dropout rate for attention layers. Defaults to 0.0.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        hidden_dim (int): The hidden dimension.
+        encoder (Encoder): The transformer encoder module of the model.
+
+    Methods:
+        _compute_losses(batch: torch.Tensor) -> dict:
+            Compute the losses and accuracy for a given batch of data.
+
+        _get_inputs_and_outputs(batch: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            Get the inputs and outputs from a batch. Required for making predictions with the `BaseModel` class.
+    """
+    def __init__(self,
+                 num_layers: int,
+                 num_heads: int,
+                 hidden_dim: int,
+                 mlp_dim: int,
+                 dropout: float = 0.0,
+                 attention_dropout: float = 0.0,
+                 *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.hidden_dim = hidden_dim
+        self.encoder = Encoder(
+            num_layers,
+            num_heads,
+            hidden_dim,
+            mlp_dim,
+            dropout,
+            attention_dropout,
+        )
     
 
     def _get_scheduler(self, optimizer: torch.optim.Optimizer) -> torch.optim.lr_scheduler._LRScheduler:
@@ -107,7 +114,10 @@ class BaseICLModel(BaseModel):
             torch.optim.lr_scheduler._LRScheduler: The scheduler object.
         """ 
         return InverseSqrtLR(optimizer=optimizer, warmup_steps=4000, d_model=self.hidden_dim)
-  
+
+
+
+
 
 class ProtoNet(BaseICLModel):
     def _protonet_logits(self, prototypes : torch.Tensor) -> torch.Tensor:
@@ -126,7 +136,8 @@ class ProtoNet(BaseICLModel):
         return -torch.sum( (query[:, None] - classes) ** 2, dim = -1) # compute the negative squared distances between the query and each class
 
 
-class ProtoNetICL(ProtoNet):
+
+class ProtoNetICL(BaseICLTransformer, ProtoNet):
     def forward(self, features : torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the model.
@@ -147,7 +158,7 @@ class ProtoNetICL(ProtoNet):
 
 
 
-class ProtonetClip(ProtoNet):
+class ProtoNetClip(ProtoNet):
     def forward(self, features : torch.Tensor, mask : torch.Tensor) -> torch.Tensor:
         """
         Computes the ProtoNet logits directly from the CLIP embeddings, without
