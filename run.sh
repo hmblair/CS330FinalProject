@@ -6,7 +6,7 @@ python3 main.py \
     --num_layers 2 \
     --num_heads 8 \
     --mlp_dim 128 \
-    --batch_size 32 \
+    --batch_size 16 \
     --way 5 \
     --shot 2 \
     --dataset imagenet-tiny
