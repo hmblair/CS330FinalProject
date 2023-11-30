@@ -20,9 +20,8 @@ args = parser.parse_args()
 
 # initialise the trainer
 trainer = pl.Trainer(
-    accelerator = 'cpu',
     max_epochs = args.max_epochs,
-    precision = '32',
+    precision = '16-mixed',
     )
 
 # get the data path
