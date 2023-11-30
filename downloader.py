@@ -6,10 +6,8 @@ import os
 import zipfile
 import shutil
 
-from os.path import dirname, abspath
-parent_dir = dirname(dirname(abspath(__file__)))
-data_dir = os.path.join(parent_dir, 'Data')
-
+if not os.path.exists('Data'):
+    os.mkdir('Data')
 
 def downloader_with_progress(url, filename):
     # Streaming, so we can iterate over the response.
@@ -26,21 +24,20 @@ def downloader_with_progress(url, filename):
         print("ERROR, something went wrong")
 
 
-
 def download_imagenet_tiny():
     # download the dataset
-    zipped_file = 'tiny-imagenet-200.zip'
+    zipped_file = 'Data/tiny-imagenet-200.zip'
     if not os.path.exists(zipped_file):
         url = 'https://image-net.org/data/tiny-imagenet-200.zip'
         downloader_with_progress(url, zipped_file)
     
     # extract the dataset
-    if not os.path.exists('tiny-imagenet-200'):
+    if not os.path.exists('Data/tiny-imagenet-200'):
         with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
             zip_ref.extractall()
     
     # extract only the train dataset
-    if not os.path.exists('imagenet-tiny'):
+    if not os.path.exists('Data/imagenet-tiny'):
         shutil.move('tiny-imagenet-200/train', 'imagenet-tiny')
 
 

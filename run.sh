@@ -8,4 +8,5 @@ python3 main.py \
     --mlp_dim 128 \
     --batch_size 32 \
     --way 5 \
-    --shot 1
+    --shot 1\
+    --dataset imagenet-tiny
