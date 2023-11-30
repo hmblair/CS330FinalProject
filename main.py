@@ -5,6 +5,7 @@ from Model import ProtoNetICL
 from Data import ClipDataModule
 import os
 import warnings
+from pytorch_lightning.loggers import TensorBoardLogger
 
 parser = argparse.ArgumentParser(prog='Scalable In-Context Meta-Learning')
 parser.add_argument('--max_epochs', type=int)
@@ -18,10 +19,15 @@ parser.add_argument('--shot', type=int)
 parser.add_argument('--dataset', type=str)
 args = parser.parse_args()
 
+
+# initialise the logger
+logger = TensorBoardLogger('lightning_logs', name='ProtoNetICL')
+
 # initialise the trainer
 trainer = pl.Trainer(
     max_epochs = args.max_epochs,
     precision = '16-mixed',
+    logger = logger,
     )
 
 # get the data path
