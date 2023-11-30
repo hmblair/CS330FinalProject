@@ -189,16 +189,7 @@ class ClipDataModule(BaseDataModule):
         if not sum(split) == 1:
             raise ValueError('The split must sum to 1.')
 
-        # get the class folders
-        class_folders = [
-            os.path.join(path, task, subtask)
-            for task in os.listdir(path)
-            if os.path.isdir(os.path.join(path, task))
-            for subtask in os.listdir(os.path.join(path, task))
-            if os.path.isdir(os.path.join(path, task, subtask))
-        ]
-        if not class_folders:
-            raise OSError(f'Could not find any class folders in {path}.')
+        class_folders = self._get_folders()
         num_classes = len(class_folders)
 
         # shuffle the class folders
@@ -211,15 +202,23 @@ class ClipDataModule(BaseDataModule):
         self.class_folders = {'train' : class_folders[:num_train],
                               'val' : class_folders[num_train : num_train + num_val],
                               'test' : class_folders[num_train + num_val :]}
-
+        
         # store the trainer, way, and shot
         self.way = way
         self.shot = shot
 
         # initialize the CLIP model and get the embedding dimension
-        encode, _ = clip.load('ViT-B/32', device='mps')
+        encode, _ = clip.load('ViT-B/32', device='cpu')
         self.encode = encode.encode_image
         self.embedding_dim = encode.visual.output_dim
+
+
+    def _get_folders(self):
+        folders = []
+        for dirpath, dirnames, filenames in os.walk(self.path):
+            if not dirnames:
+                folders.append(dirpath)
+        return folders
 
 
     def _create_datasets(self, phase: str):
@@ -273,12 +272,10 @@ class ClipDataModule(BaseDataModule):
 
 
 
-
-
-
 ## A quick test to make sure that it works
 def test():
-    datamodule = ClipDataModule(path = 'omniglot_resized',
+    path = '/Users/hmblair/Documents/University/Graduate/Classes/CS330/FinalProject/Data/imagenet-tiny'
+    datamodule = ClipDataModule(path = path,
                                 split = [0.8, 0.1, 0.1],
                                 batch_size = 4,
                                 way = 2,

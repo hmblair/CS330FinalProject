@@ -25,7 +25,6 @@ class BaseModel(pl.LightningModule):
         if lr is None:
             warnings.warn('No learning rate was provided. The model will not be able to be trained.')
         self.lr = lr  # the learning rate
-        self.objective = torch.nn.MSELoss()  # the loss function
 
 
     def forward(self, *args, **kwargs) -> Any:

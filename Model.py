@@ -109,8 +109,7 @@ class BaseICLModel(BaseModel):
         return InverseSqrtLR(optimizer=optimizer, warmup_steps=4000, d_model=self.hidden_dim)
   
 
-
-class ProtoNetICL(BaseICLModel):
+class ProtoNet(BaseICLModel):
     def _protonet_logits(self, prototypes : torch.Tensor) -> torch.Tensor:
         """
         Compute the ProtoNet logits for a given tensor of prototypes. The last
@@ -125,8 +124,9 @@ class ProtoNetICL(BaseICLModel):
         query = prototypes[:, -1] # the query is the last element of each batch
         classes = prototypes[:, 1:] # the classes are all but the last element of each batch
         return -torch.sum( (query[:, None] - classes) ** 2, dim = -1) # compute the negative squared distances between the query and each class
-        
 
+
+class ProtoNetICL(ProtoNet):
     def forward(self, features : torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the model.
@@ -147,16 +147,21 @@ class ProtoNetICL(BaseICLModel):
 
 
 
-class OtherICL(BaseICLModel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.final_layer = nn.Linear(self.hidden_dim, 1) # final layer for classification
+class ProtonetClip(ProtoNet):
+    def forward(self, features : torch.Tensor, mask : torch.Tensor) -> torch.Tensor:
+        """
+        Computes the ProtoNet logits directly from the CLIP embeddings, without
+        passing them through the transformer encoder. Useful for comparision. 
 
-    def forward(self, features : torch.Tensor) -> torch.Tensor:
-        predicted_features = self.encoder.forward(x=features, mask=None)
-        return torch.mean(
-            self.final_layer(predicted_features).squeeze(), dim=2
-            )
+        Args:
+            x (torch.Tensor): Input tensor.s
+            mask (torch.Tensor): Mask tensor.
+
+        Returns:
+            torch.Tensor: Output tensor.
+        """
+        prototypes = torch.sum(features, dim=2) / torch.sum(~mask, dim=2)[..., None] # compute the prototypes for each class
+        return self._protonet_logits(prototypes)
 
 
 
