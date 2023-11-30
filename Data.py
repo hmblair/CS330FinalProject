@@ -150,7 +150,7 @@ class MetaLearningClipIterableDataset(IterableDataset):
         """
         # get the number of workers; we need to scale the length by this since each worker will
         # increment the iterator by one
-        num_workers, _ = self._get_worker_info()
+        _, num_workers = self._get_worker_info()
 
         # calculate the number of files in the dataset
         num_files = sum([len([name for name in os.listdir(path)]) for path in self.data_folders])
