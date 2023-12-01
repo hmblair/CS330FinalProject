@@ -11,4 +11,4 @@ python3 main.py \
     --way 5 \
     --shot 2 \
     --dataset imagenet-tiny \
-    --num_workers 8 \
+    --num_workers 0 \
