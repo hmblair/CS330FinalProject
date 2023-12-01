@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import argparse
 
-from Model import ProtoNetICL
+from protonet import ProtoNetICL, ProtoNetSkip
 from Data import ClipDataModule
 import os
 import warnings
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # initialise the logger and checkpoint callback
     log_dir = 'lightning_logs'
-    logger = TensorBoardLogger(log_dir, name='ProtoNetICL')
+    logger = TensorBoardLogger(log_dir, name='model_name', version=0)
     model_checkpoint = ModelCheckpoint(dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
                                         filename='best',
                                         monitor='val_loss',
@@ -84,10 +84,13 @@ if __name__ == '__main__':
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
             )
-    elif args.model == 'ProtoNetClip':
-        from Model import ProtoNetClip
-        model = ProtoNetClip(
+    elif args.model == 'ProtoNetSkip':
+        model = ProtoNetSkip(
             lr=args.learning_rate,
+            num_layers=args.num_layers,
+            num_heads=args.num_heads,
+            hidden_dim=datamodule.embedding_dim,
+            mlp_dim=args.mlp_dim,
             )
     else:
         raise ValueError(f'Invalid model name {args.model}')
