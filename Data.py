@@ -269,7 +269,8 @@ class ClipDataModule(BaseDataModule):
         """
         *d, c, h, w = x.shape # get the shape of the input tensor
         x = x.reshape(-1, c, h, w) # reshape the input tensor to be 4D
-        x = self.encode(x) # encode using CLIP
+        with torch.no_grad():
+            x = self.encode(x) # encode using CLIP
         return x.reshape(*d, -1) # reshape the output tensor
 
 
@@ -288,7 +289,7 @@ class ClipDataModule(BaseDataModule):
             return self._random_clip_embeddings(), batch[1]
         else:
             return self._encode(batch[0]), batch[1]
-    
+
 
     ## BHARGAV: Implement this
     def _random_clip_embeddings(self):
