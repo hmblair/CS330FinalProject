@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # initialise the logger and checkpoint callback
     log_dir = 'lightning_logs'
-    logger = TensorBoardLogger(log_dir, name='model_name', version=0)
+    logger = TensorBoardLogger(log_dir, name=model_name, version=0)
     model_checkpoint = ModelCheckpoint(dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
                                         filename='best',
                                         monitor='val_loss',
