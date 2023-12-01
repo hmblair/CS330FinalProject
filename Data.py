@@ -227,6 +227,8 @@ class ClipDataModule(BaseDataModule):
         self.encode = encode.encode_image
         self.embedding_dim = encode.visual.output_dim
 
+        self.use_random_embeddings = False
+
 
     def _get_folders(self):
         folders = []
@@ -282,7 +284,18 @@ class ClipDataModule(BaseDataModule):
         Returns:
                 tuple[torch.Tensor, torch.Tensor]: The encoded batch and the corresponding labels.
         """
-        return self._encode(batch[0]), batch[1]
+        if self.use_random_embeddings:
+            return self._random_clip_embeddings(), batch[1]
+        else:
+            return self._encode(batch[0]), batch[1]
+    
+
+    ## BHARGAV: Implement this
+    def _random_clip_embeddings(self):
+        """
+        Generate random clip embeddings for the classes.
+        """
+        raise NotImplementedError
 
 
 
