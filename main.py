@@ -11,6 +11,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog='Scalable In-Context Meta-Learning')
+    parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--model', type=str)
     parser.add_argument('--max_epochs', type=int)
     parser.add_argument('--learning_rate', type=float)
@@ -35,6 +36,20 @@ if __name__ == '__main__':
                 if getattr(args, arg) is not None]
                 )
 
+
+    ## Priority:
+    ## TODO: pass through random clip vectors to see hw it performs (Bhargav)
+    ## TODO: Try using diffrent CLIP models (Hamish)
+    ## TODO: Try a different LR scheduler (it must decrease significantly by 30 epochs or so) (Hamish)
+    ## TODO: See what happens with CLIP only, and no encoder (Henry) (Change trainer.fit to trainer.test)
+    ## TODO: Start making the poster in Google Slides (Henry)
+
+    ## Lower priority
+    ## TODO: Make the dataloader deterministic (so it loops over the entire dataset exactly once per epoch) (Hamish)
+    ## TODO: Make the dataset work with multiple GPUS (Hamish)
+
+
+    # get the model name from the hyperparameters
     model_name = get_model_name(args)
 
     # initialise the logger and checkpoint callback
@@ -92,9 +107,20 @@ if __name__ == '__main__':
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
             )
+    elif args.model == 'ProtoNetWithoutEncoder':
+        model = ProtoNetSkip(
+            lr=args.learning_rate,
+            num_layers=args.num_layers,
+            num_heads=args.num_heads,
+            hidden_dim=datamodule.embedding_dim,
+            mlp_dim=args.mlp_dim,
+            )
     else:
         raise ValueError(f'Invalid model name {args.model}')
 
-    # train the model
-    trainer.fit(model, datamodule)
+    # run the given mode
+    if args.mode == 'train':
+        trainer.fit(model, datamodule)
+    elif args.mode == 'test':
+        trainer.test(model, datamodule)
 
