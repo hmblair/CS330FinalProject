@@ -27,6 +27,14 @@ class Encoder(nn.Module):
         self.layers = nn.ModuleDict(layers)
 
 
+    def _freeze_layers(self) -> None:
+        """
+        Freeze the parameters of the encoder, mostly for testing purposes. 
+        """
+        for param in self.parameters():
+            param.requires_grad = False
+
+
     def _init_last_layer_zero(self) -> None:
         """
         Initialise the last layer of the encoder to zero.
