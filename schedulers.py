@@ -87,7 +87,6 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-
     def _warmup_step(self) -> list[float]:
         """
         A linear warmup step for the learning rate. The maximum learning rate is 
@@ -96,7 +95,7 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         Returns:
         - float: The learning rate for the current warmup step.
         """
-        scale = (self.last_epoch + 1) / (self.last_epoch * self.warmup_steps)
+        scale = (self.last_epoch + 2) / (self.last_epoch + 1 * self.warmup_steps)
         return [x * scale for x in self.base_lrs]
     
 
@@ -108,7 +107,7 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         Returns:
         - float: The learning rate for the current decay step.
         """
-        scale = (self.last_epoch - self.warmup_steps + 1) / (self.last_epoch - self.warmup_steps)
+        scale = (self.last_epoch - self.warmup_steps + 2) / (self.last_epoch - self.warmup_steps + 1)
         return [x * (scale ** (-1/2)) for x in self.base_lrs]
 
 
