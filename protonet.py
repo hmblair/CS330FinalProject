@@ -62,6 +62,7 @@ class ProtoNet(BaseICLModel, metaclass=ABCMeta):
 
 
 
+
 class ProtoNetICL(BaseICLTransformer, ProtoNet):
     """
     ProtoNet with in-context learning provided by a transformer encoder.
@@ -69,7 +70,17 @@ class ProtoNetICL(BaseICLTransformer, ProtoNet):
     def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         return self.encoder.forward(x, mask)
     
+
+
+
+class ProtoNetWithoutEncoder(BaseICLTransformer, ProtoNet):
+    """
+    ProtoNet with in-context learning provided by a transformer encoder.
+    """
+    def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        return 
     
+
 
 class ProtoNetSkip(BaseICLTransformer, ProtoNet):
     """
