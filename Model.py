@@ -119,4 +119,4 @@ class BaseICLTransformer(BaseICLModel):
         Returns:
             torch.optim.lr_scheduler._LRScheduler: The scheduler object.
         """ 
-        return InverseSqrtLR(optimizer=optimizer, warmup_steps=4000, d_model=self.hidden_dim)
+        return InverseSqrtLR(optimizer=optimizer, warmup_steps=4000)
