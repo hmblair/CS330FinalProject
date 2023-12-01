@@ -31,7 +31,7 @@ class Encoder(nn.Module):
         """
         Freeze the parameters of the encoder, mostly for testing purposes. 
         """
-        for param in self.parameters():
+        for param in self[f"encoder_layer_{len(self.layers) - 1}"].parameters():
             param.requires_grad = False
 
 
