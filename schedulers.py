@@ -67,7 +67,6 @@ class WarmupAndDecayLRScheduler(LRScheduler, metaclass=ABCMeta):
         
 
 
-
 class InverseSqrtLR(WarmupAndDecayLRScheduler):
     """
     Learning rate scheduler that implements an inverse square root schedule
@@ -111,59 +110,6 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         """
         scale = (self.last_epoch - self.warmup_steps + 1) / (self.last_epoch - self.warmup_steps)
         return [x * (scale ** (-1/2)) for x in self.base_lrs]
-
-
-
-
-
-class InverseSqrtLR(WarmupAndDecayLRScheduler):
-    """
-    Learning rate scheduler that implements an inverse square root schedule
-    with a linear warmup.
-
-    Parameters:
-        - d_model (int): The model dimension.
-        - *args: Variable length argument list.
-        - **kwargs: Arbitrary keyword arguments.
-
-    Attributes:
-        - scale_factor (float): The scale factor for the learning rate.
-
-    Inherits:
-        - WarmupAndDecayLRScheduler: Base class for learning rate schedulers that incorporate 
-        warm-up and decay steps.
-    """
-    def __init__(self, d_model : int, **kwargs):
-        self.scale_factor = d_model ** (-1/2)
-        super().__init__(**kwargs)
-
-
-    def _warmup_step(self) -> list[float]:
-        """
-        A linear warmup step for the learning rate. The maximum learning rate is 
-        equal to the scale factor multiplied by the warmup steps to the power of -1/2.
-
-        Returns:
-        - float: The learning rate for the current warmup step.
-        """
-        return [
-            self.scale_factor * self.last_epoch * (self.warmup_steps ** (-3/2))
-            for _ in self.base_lrs
-        ]
-    
-
-    def _decay_step(self) -> list[float]:
-        """
-        An inverse square root decay step for the learning rate. The learning rate 
-        is equal to the scale factor multiplied by the current epoch to the power of -1/2.
-
-        Returns:
-        - float: The learning rate for the current decay step.
-        """
-        return [
-            self.scale_factor * (self.last_epoch ** (-1/2))
-            for _ in self.base_lrs
-            ]
 
 
 
