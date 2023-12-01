@@ -81,7 +81,7 @@ class ProtoNetSkip(BaseICLTransformer, ProtoNet):
 
         # initialise the last layer of the encoder to zero, so that the skip connection is initialized to the identity
         self.encoder._init_last_layer_zero() 
-        self.encoder._freeze_layers()
+
 
     def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         return x + self.encoder.forward(x, mask)
