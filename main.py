@@ -9,7 +9,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(prog='Scalable In-Context Meta-Learning')
     parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--model', type=str)
@@ -31,10 +30,13 @@ if __name__ == '__main__':
         """
         Returns a string summary of the model and its hyperparameters.
         """
+        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode']
         return '_'.join(
             [str(getattr(args, arg)) 
                 for arg in vars(args) 
-                if getattr(args, arg) is not None]
+                if getattr(args, arg) is not None
+                and arg not in ignore_args
+            ]
                 )
 
 
