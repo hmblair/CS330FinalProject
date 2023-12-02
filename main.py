@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import argparse
 
-from protonet import ProtoNetICL, ProtoNetSkip
+from protonet import ProtoNetICL, ProtoNetSkip, ProtoNetWithoutEncoder
 from Data import ClipDataModule
 import os
 import warnings
@@ -15,6 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str)
     parser.add_argument('--max_epochs', type=int)
     parser.add_argument('--learning_rate', type=float)
+    parser.add_argument('--learning_rate_warmup', type=int)
     parser.add_argument('--num_layers', type=int)
     parser.add_argument('--num_heads', type=int)
     parser.add_argument('--mlp_dim', type=int)
@@ -108,12 +109,8 @@ if __name__ == '__main__':
             mlp_dim=args.mlp_dim,
             )
     elif args.model == 'ProtoNetWithoutEncoder':
-        model = ProtoNetSkip(
+        model = ProtoNetWithoutEncoder(
             lr=args.learning_rate,
-            num_layers=args.num_layers,
-            num_heads=args.num_heads,
-            hidden_dim=datamodule.embedding_dim,
-            mlp_dim=args.mlp_dim,
             )
     else:
         raise ValueError(f'Invalid model name {args.model}')
@@ -123,4 +120,7 @@ if __name__ == '__main__':
         trainer.fit(model, datamodule)
     elif args.mode == 'test':
         trainer.test(model, datamodule)
+    else:
+        raise ValueError(f'Invalid mode {args.mode}')
+    
 

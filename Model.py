@@ -30,11 +30,12 @@ class BaseICLModel(BaseModel):
             dict: A dictionary containing the computed loss and accuracy.
         """
         features, labels = batch # unpack the batch
+        query_labels = labels[:,-1] # get the query labels
         logits = self(features) # compute the logits
-        loss = self.objective(logits, labels[:,-1]) # compute the loss for the query
+        loss = self.objective(logits, query_labels) # compute the loss for the query
 
         predictions = torch.argmax(logits, dim=1) # compute the predicted classes
-        accuracy = torch.sum(predictions == labels[:,-1]) / torch.numel(predictions) # compute the accuracy
+        accuracy = torch.sum(predictions == query_labels) / torch.numel(predictions) # compute the accuracy
 
         return {'loss': loss, 'accuracy': accuracy}
 
@@ -53,7 +54,7 @@ class BaseICLModel(BaseModel):
         x, y = batch
         return x, y
     
-
+    
     def _get_optimizer(self) -> torch.optim.Optimizer:
         """
         Get the optimizer for the model, which is Adam.
@@ -98,9 +99,11 @@ class BaseICLTransformer(BaseICLModel):
                  mlp_dim: int,
                  dropout: float = 0.0,
                  attention_dropout: float = 0.0,
+                 warmup_steps: int = 4000,
                  *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.hidden_dim = hidden_dim
+        self.warmup_steps = warmup_steps
         self.encoder = Encoder(
             num_layers,
             num_heads,
@@ -119,4 +122,4 @@ class BaseICLTransformer(BaseICLModel):
         Returns:
             torch.optim.lr_scheduler._LRScheduler: The scheduler object.
         """ 
-        return InverseSqrtLR(optimizer=optimizer, warmup_steps=4000)
+        return InverseSqrtLR(optimizer=optimizer, warmup_steps=self.warmup_steps)
