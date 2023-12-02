@@ -1,6 +1,7 @@
 from torch.optim.lr_scheduler import LRScheduler
 import math
 from abc import abstractmethod, ABCMeta
+from typing import Iterable
 
 
 class WarmupAndDecayLRScheduler(LRScheduler, metaclass=ABCMeta):
@@ -19,13 +20,29 @@ class WarmupAndDecayLRScheduler(LRScheduler, metaclass=ABCMeta):
         LRScheduler: Base class for learning rate schedulers.
 
     Methods:
-        _warmup_step(): Calculates a warm-up step for the learning rate scheduler.
-        _decay_step(): Calculates a decay step for the learning rate scheduler.
+        _warmup_step(): Calculates a warm-up step for the learning rate scheduler. An abstract method that must be implemented by subclasses.
+        _decay_step(): Calculates a decay step for the learning rate scheduler. An abstract method that must be implemented by subclasses.
         get_lr(): Get the learning rate for the current epoch (or step).
     """
     def __init__(self, warmup_steps, **kwargs) -> None:
         self.warmup_steps = warmup_steps
         super().__init__(**kwargs)
+
+
+    def get_lr(self) -> list[float]:
+        """
+        Get the learning rate for the current epoch (or step).
+
+        If the current epoch is less than the warm-up steps, the learning rate is calculated using the warm-up step function.
+        Otherwise, the learning rate is calculated using the decay step function.
+
+        Returns:
+            list[float]: The learning rates for each parameter group.
+        """
+        if self.last_epoch < self.warmup_steps:
+            return self._warmup_step()
+        else:
+            return self._decay_step()
     
 
     @abstractmethod
@@ -50,22 +67,6 @@ class WarmupAndDecayLRScheduler(LRScheduler, metaclass=ABCMeta):
         return
 
 
-    def get_lr(self) -> list[float]:
-        """
-        Get the learning rate for the current epoch (or step).
-
-        If the current epoch is less than the warm-up steps, the learning rate is calculated using the warm-up step function.
-        Otherwise, the learning rate is calculated using the decay step function.
-
-        Returns:
-            list[float]: The learning rates for each parameter group.
-        """
-        if self.last_epoch < self.warmup_steps:
-            return self._warmup_step()
-        else:
-            return self._decay_step()
-        
-
 
 class InverseSqrtLR(WarmupAndDecayLRScheduler):
     """
@@ -84,6 +85,22 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         - WarmupAndDecayLRScheduler: Base class for learning rate schedulers that incorporate 
         warm-up and decay steps.
     """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        for group in self.optimizer.param_groups:
+            group['lr'] = group['lr'] / (self.warmup_steps + 1)
+
+
+    def _linear_warmup(self) -> Iterable:
+        """
+        A linear warmup step for the learning rate. The maximum learning rate is 
+        equal to the learning rate provided to the optimizer.
+
+        Returns:
+        - float: The learning rate for the current warmup step.
+        """
+        return [x + self.last_epoch / self.warmup_steps for x in self.base_lrs]
+
 
 
     def _warmup_step(self) -> list[float]:
@@ -94,8 +111,8 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         Returns:
         - float: The learning rate for the current warmup step.
         """
-        scale = (self.last_epoch + 2) / (self.last_epoch + 1 * self.warmup_steps)
-        return [x * scale for x in self.base_lrs]
+        scale = (self.last_epoch + 2) / (self.last_epoch + 1)
+        return [group['lr'] * scale for group in self.optimizer.param_groups]
     
 
     def _decay_step(self) -> list[float]:
@@ -107,7 +124,7 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         - float: The learning rate for the current decay step.
         """
         scale = (self.last_epoch - self.warmup_steps + 2) / (self.last_epoch - self.warmup_steps + 1)
-        return [x * (scale ** (-1/2)) for x in self.base_lrs]
+        return [group['lr'] * (scale ** (-1/2)) for group in self.optimizer.param_groups]
 
 
 
