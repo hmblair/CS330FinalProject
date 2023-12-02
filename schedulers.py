@@ -84,8 +84,7 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         - WarmupAndDecayLRScheduler: Base class for learning rate schedulers that incorporate 
         warm-up and decay steps.
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+
 
     def _warmup_step(self) -> list[float]:
         """
