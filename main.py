@@ -99,6 +99,7 @@ if __name__ == '__main__':
             num_heads=args.num_heads,
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
+            warmup_steps=args.learning_rate_warmup,
             )
     elif args.model == 'ProtoNetSkip':
         model = ProtoNetSkip(
@@ -107,6 +108,7 @@ if __name__ == '__main__':
             num_heads=args.num_heads,
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
+            warmup_steps=args.learning_rate_warmup,
             )
     elif args.model == 'ProtoNetWithoutEncoder':
         model = ProtoNetWithoutEncoder(
