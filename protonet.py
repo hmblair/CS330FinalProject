@@ -73,12 +73,25 @@ class ProtoNetICL(BaseICLTransformer, ProtoNet):
 
 
 
-class ProtoNetWithoutEncoder(BaseICLTransformer, ProtoNet):
+class ProtoNetWithoutEncoder(ProtoNet):
     """
     ProtoNet with in-context learning provided by a transformer encoder.
     """
     def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-        return 
+        return x
+    
+
+
+class ProtoNetLinear(ProtoNet):
+    """
+    ProtoNet with in-context learning provided by a transformer encoder.
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.linear = torch.nn.Linear(self.hidden_dim, self.hidden_dim)
+        
+    def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        return self.linear(x)
     
 
 
