@@ -51,7 +51,7 @@ if __name__ == '__main__':
         if os.path.isfile(dir):
             continue
         model_name = dir.split('_')[0]
-        ckpt_dir = os.path.join(args.model_folder, dir, 'version_0', 'checkpoints', 'best.ckpt')
+        ckpt_dir = os.path.join(args.model_folder, dir, 'checkpoints', 'best.ckpt')
 
         # initialise the trainer
         log_dir = 'test_logs'
@@ -78,7 +78,6 @@ if __name__ == '__main__':
         test_logs.append(
             trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
         )
-
 
     # test ProtoNetWithoutEncoder
     log_dir = 'test_logs'
