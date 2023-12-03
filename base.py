@@ -1,10 +1,12 @@
 from typing import Any
 import torch
+import torch.nn as nn
 import pytorch_lightning as pl
 from typing import Optional
 import math
 import warnings
 from distributed_helper import distributed_print
+import os, psutil
 
 
 class BaseModel(pl.LightningModule):
@@ -68,6 +70,8 @@ class BaseModel(pl.LightningModule):
         loss = self._compute_and_log_losses(batch, 'train') # compute the losses
         lr = self._get_lr() # get the learning rate
         self.log('lr', lr, prog_bar=True, on_step=True, sync_dist=True) # log the learning rate
+        process = psutil.Process()
+        self.log('mem_use', process.memory_info().rss, prog_bar=True, on_step=True, sync_dist=True) # log the learning rate
         return loss
     
 
@@ -251,6 +255,43 @@ class BaseModel(pl.LightningModule):
         """
         return self.optimizers().param_groups[0]["lr"]
     
+
+
+
+
+class BaseClassifierModel(BaseModel):
+    """
+    Base class for in-context meta-learning models.
+
+    Args:
+        objective (nn.CrossEntropyLoss): The cross entropy objective.
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.objective = nn.CrossEntropyLoss() # the objective function
+
+
+    def _compute_losses(self, batch: torch.Tensor) -> dict:
+        """
+        Compute the loss and accuracy for a given batch of data.
+
+        Args:
+            batch (torch.Tensor): The input batch of data, consisting of features and labels.
+
+        Returns:
+            dict: A dictionary containing the computed loss and accuracy.
+        """
+        features, labels = batch # unpack the batch
+        query_labels = labels[:,-1] # get the query labels
+        logits = self(features) # compute the logits
+        loss = self.objective(logits, query_labels) # compute the loss for the query
+
+        predictions = torch.argmax(logits, dim=1) # compute the predicted classes
+        accuracy = torch.sum(predictions == query_labels) / torch.numel(predictions) # compute the accuracy
+
+        return {'loss': loss, 'accuracy': accuracy}
+
+
 
 
 
