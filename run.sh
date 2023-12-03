@@ -9,7 +9,7 @@ python3 main.py \
     --num_heads 8 \
     --mlp_dim 128 \
     --batch_size 16 \
-    --way 5 \
+    --way 2 \
     --shot 2 \
     --dataset decathalon \
     --num_workers 0 \
