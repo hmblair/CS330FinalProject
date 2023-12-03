@@ -43,9 +43,6 @@ if __name__ == '__main__':
         num_workers = args.num_workers,
         )
     
-
-    test_logs = []
-
     # test the models in the given folder
     for dir in os.listdir(args.model_folder):
         if os.path.isfile(dir):
@@ -75,9 +72,7 @@ if __name__ == '__main__':
 
         # test the model
         print(f'Testing {model_name} on {args.dataset} with {args.way}-way {args.shot}-shot')
-        test_logs.append(
-            trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
-        )
+        trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
 
     # test ProtoNetWithoutEncoder
     log_dir = 'test_logs'
@@ -90,8 +85,4 @@ if __name__ == '__main__':
     
     print(f'Testing ProtoNetWithoutEncoder on {args.dataset} with {args.way}-way {args.shot}-shot')
     model = ProtoNetWithoutEncoder()
-    test_logs.append(
-        trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
-    )
-
-    print(test_logs)
+    trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
