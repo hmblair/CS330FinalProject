@@ -44,6 +44,8 @@ if __name__ == '__main__':
         )
     
 
+    test_logs = []
+
     # test the models in the given folder
     for dir in os.listdir(args.model_folder):
         if os.path.isfile(dir):
@@ -73,7 +75,9 @@ if __name__ == '__main__':
 
         # test the model
         print(f'Testing {model_name} on {args.dataset} with {args.way}-way {args.shot}-shot')
-        trainer.test(model, datamodule)
+        test_logs.append(
+            trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
+        )
 
 
     # test ProtoNetWithoutEncoder
@@ -87,5 +91,8 @@ if __name__ == '__main__':
     
     print(f'Testing ProtoNetWithoutEncoder on {args.dataset} with {args.way}-way {args.shot}-shot')
     model = ProtoNetWithoutEncoder()
-    trainer.test(model, datamodule)
+    test_logs.append(
+        trainer.test(model, datamodule).update({'way': args.way, 'shot': args.shot})
+    )
 
+    print(test_logs)
