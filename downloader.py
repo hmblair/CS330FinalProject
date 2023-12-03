@@ -4,7 +4,9 @@ from tqdm import tqdm
 import requests
 import os 
 import zipfile
+import tarfile 
 import shutil
+
 
 if not os.path.exists('Data'):
     os.mkdir('Data')
@@ -53,17 +55,12 @@ def download_decathalon():
     # extract the dataset
     if not os.path.exists('Data/decathlon-1.0-data-imagenet'):
         print(f'Extracting {zipped_file}')
-        with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
-            zip_ref.extractall('Data/')
+        with tarfile.open(zipped_file, 'r') as tar_ref:
+            tar_ref.extractall('Data/')
 
     # rename the dataset
     if not os.path.exists('Data/decathlon'):
         shutil.move('Data/decathlon-1.0-data-imagenet', 'Data/decathlon')
-
-
-
-
-
 
 
 
