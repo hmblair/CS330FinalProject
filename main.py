@@ -103,7 +103,7 @@ if __name__ == '__main__':
         )
     
     steps_per_epoch = len(datamodule.train_dataloader())
-    warmup_steps = args.learning_rate_warmup_epochs * steps_per_epoch / (args.batch_size * args.way * args.shot)
+    warmup_steps = args.learning_rate_warmup_epochs * steps_per_epoch
 
     # initialise the model
     if args.model == 'ProtoNetICL':
