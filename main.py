@@ -82,7 +82,7 @@ if __name__ == '__main__':
     elif args.dataset == 'omniglot':
         warnings.warn('There is no downloader for omniglot.')
         data_path = os.path.join('Data', 'omniglot_resized')
-    elif args.dataset == 'decathlon':
+    elif args.dataset == 'decathalon':
         from downloader import download_decathalon
         download_decathalon()
         train_path = os.path.join('Data', 'decathlon', 'train')
