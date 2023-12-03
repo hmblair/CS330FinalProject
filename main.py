@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str)
     parser.add_argument('--max_epochs', type=int)
     parser.add_argument('--learning_rate', type=float)
-    parser.add_argument('--learning_rate_warmup', type=int)
+    parser.add_argument('--learning_rate_warmup_epochs', type=int)
     parser.add_argument('--num_layers', type=int)
     parser.add_argument('--num_heads', type=int)
     parser.add_argument('--mlp_dim', type=int)
@@ -101,8 +101,10 @@ if __name__ == '__main__':
         num_workers = args.num_workers,
         cache = args.cache,
         )
+    
+    steps_per_epoch = len(datamodule.train_dataloader())
+    warmup_steps = args.learning_rate_warmup_epochs * steps_per_epoch / (args.batch_size * args.way * args.shot)
 
-    warmup_steps = args.learning_rate_warmup / (args.batch_size * args.way * args.shot)
     # initialise the model
     if args.model == 'ProtoNetICL':
         model = ProtoNetICL(
