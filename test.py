@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
+    parser.add_argument('--clip_only', action='store_true')
     args = parser.parse_args()
 
 
@@ -30,6 +31,11 @@ if __name__ == '__main__':
         download_indoor_scenes()
         data_path = os.path.join('Data', 'indoor_scenes')
         paths = {'test' : data_path}
+    elif args.dataset == 'fruits':
+        from downloader import download_fruits
+        download_fruits()
+        data_path = os.path.join('Data', 'fruits')
+        paths = {'test' : data_path}
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
@@ -43,35 +49,36 @@ if __name__ == '__main__':
         )
     
     # test the models in the given folder
-    for dir in os.listdir(args.model_folder):
-        if os.path.isfile(dir):
-            continue
-        model_name = dir.split('_')[0]
-        ckpt_dir = os.path.join(args.model_folder, dir, 'checkpoints', 'best.ckpt')
+    if not args.clip_only:
+        for dir in os.listdir(args.model_folder):
+            if os.path.isfile(dir):
+                continue
+            model_name = dir.split('_')[0]
+            ckpt_dir = os.path.join(args.model_folder, dir, 'checkpoints', 'best.ckpt')
 
-        # initialise the trainer
-        log_dir = 'test_logs'
-        logger = CSVLogger(log_dir, name=dir, version=0)
-        trainer = pl.Trainer(
-            accelerator = args.accelerator,
-            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-            logger = logger,
-            )
+            # initialise the trainer
+            log_dir = 'test_logs'
+            logger = CSVLogger(log_dir, name=dir, version=0)
+            trainer = pl.Trainer(
+                accelerator = args.accelerator,
+                precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+                logger = logger,
+                )
 
-        # initialise the model
-        if model_name == 'ProtoNetICL':
-            model = ProtoNetICL
-        elif model_name == 'ProtoNetWithoutEncoder':
-            model = ProtoNetWithoutEncoder
-        else:
-            raise ValueError(f'Invalid model name {model_name}')
+            # initialise the model
+            if model_name == 'ProtoNetICL':
+                model = ProtoNetICL
+            elif model_name == 'ProtoNetWithoutEncoder':
+                model = ProtoNetWithoutEncoder
+            else:
+                raise ValueError(f'Invalid model name {model_name}')
 
-        # load the model
-        model = model.load_from_checkpoint(ckpt_dir)
+            # load the model
+            model = model.load_from_checkpoint(ckpt_dir)
 
-        # test the model
-        print(f'Testing {model_name} on {args.dataset} with {args.way}-way {args.shot}-shot')
-        trainer.test(model, datamodule)
+            # test the model
+            print(f'Testing {dir} on {args.dataset} with {args.way}-way {args.shot}-shot')
+            trainer.test(model, datamodule)
 
     # test ProtoNetWithoutEncoder
     log_dir = 'test_logs'

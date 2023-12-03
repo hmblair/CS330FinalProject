@@ -63,6 +63,7 @@ def download_decathalon():
         shutil.move('Data/imagenet12', 'Data/decathlon')
 
 
+
 def download_indoor_scenes():
     # download the dataset
     zipped_file = 'Data/indoorCVPR_09.tar'
@@ -79,7 +80,29 @@ def download_indoor_scenes():
     # rename the dataset
     if not os.path.exists('Data/indoor_scenes'):
         shutil.move('Data/Images', 'Data/indoor_scenes')
+
+
+
+def download_fruits():
+    # download the dataset
+    zipped_file = 'Data/archive.zip'
+    if not os.path.exists(zipped_file):
+        url = 'https://www.kaggle.com/datasets/moltean/fruits/download?datasetVersionNumber=9'
+        downloader_with_progress(url, zipped_file)
     
+    # extract the dataset
+    if not os.path.exists('Data/fruits'):
+        print(f'Extracting {zipped_file}')
+        with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
+            zip_ref.extractall('Data/')
+
+    # rename the dataset
+    if not os.path.exists('Data/fruits'):
+        shutil.move('Data/archive/fruits-360_dataset/fruits-360/Training', 'Data/fruits')
+    
+
+
+
 
 
 
