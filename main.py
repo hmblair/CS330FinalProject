@@ -31,7 +31,7 @@ if __name__ == '__main__':
         """
         Returns a string summary of the model and its hyperparameters.
         """
-        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode']
+        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache']
         return '_'.join(
             [str(getattr(args, arg)) 
                 for arg in vars(args) 
@@ -102,6 +102,7 @@ if __name__ == '__main__':
         cache = args.cache,
         )
 
+    warmup_steps = args.learning_rate_warmup / (args.batch_size * args.way * args.shot)
     # initialise the model
     if args.model == 'ProtoNetICL':
         model = ProtoNetICL(
@@ -110,7 +111,7 @@ if __name__ == '__main__':
             num_heads=args.num_heads,
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
-            warmup_steps=args.learning_rate_warmup,
+            warmup_steps=warmup_steps,
             )
     elif args.model == 'ProtoNetSkip':
         model = ProtoNetSkip(
@@ -119,7 +120,7 @@ if __name__ == '__main__':
             num_heads=args.num_heads,
             hidden_dim=datamodule.embedding_dim,
             mlp_dim=args.mlp_dim,
-            warmup_steps=args.learning_rate_warmup,
+            warmup_steps=warmup_steps,
             )
     elif args.model == 'ProtoNetWithoutEncoder':
         model = ProtoNetWithoutEncoder(
