@@ -163,9 +163,7 @@ class ClipDataModule(BaseDataModule):
     DataModule for loading the Omniglot dataset (and hopefully more in the future) for meta-learning with CLIP.
 
     Args:
-        trainer (pl.Trainer): The PyTorch Lightning trainer object.
         path (Union[str, os.PathLike]): The path to the dataset directory.
-        split (list): The train/val/test split ratios.
         way (int): The number of classes per episode.
         shot (int): The number of examples per class per episode.
         *args: Additional positional arguments to be passed to the BaseDataModule constructor.
@@ -177,48 +175,29 @@ class ClipDataModule(BaseDataModule):
         on_after_batch_transfer: Encodes the batch using CLIP after it has been transferred to the device.
 
     Attributes:
-        path (str | os.PathLike): The path to the directory that contains the image folders.
+        paths (str | os.PathLike): The path to the directory that contains the image folders.
         way (int): The number of classes per episode.
         shot (int): The number of examples per class per episode.
         encode (Callable): The CLIP model.
         embedding_dim (int): The dimension of the CLIP embeddings.
     """
     def __init__(self,
-                 path : Union[str, os.PathLike],
-                 split : list,
+                 paths : dict[str, str],
                  way : int,
                  shot : int,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # verify that the path exists and is a directory
-        self.path = path
-        if not os.path.exists(path):
-            raise OSError('The specified path does not exist.')
-        if not os.path.isdir(path):
-            raise OSError('The specified path is not a directory.')
+        for phase in paths.keys():
+            if phase not in ['train', 'val', 'test']:
+                raise ValueError(f'Invalid phase {phase}.')
+        self.paths = paths
+        self._verify_paths()
 
-        # verify that the train/val/test split is valid
-        if not len(split) == 3:
-            raise ValueError('The split must be a list of three numbers.')
-        if not sum(split) == 1:
-            raise ValueError('The split must sum to 1.')
-
-        class_folders = self._get_folders()
-        num_classes = len(class_folders)
-
-        # shuffle the class folders
-        random.shuffle(class_folders)
-
-        # split the class folders into train/val/test
-        num_per_phase = [int(x * num_classes) for x in split]
-        num_train, num_val, num_test = num_per_phase
-
-        self.class_folders = {'train' : class_folders[:num_train],
-                              'val' : class_folders[num_train : num_train + num_val],
-                              'test' : class_folders[num_train + num_val :]}
+        # get the list of class folders for each phase
+        self.class_folders = {phase : self._get_folders(phase) for phase in paths.keys()}
         
-        # store the trainer, way, and shot
+        # store the way and shot
         self.way = way
         self.shot = shot
 
@@ -230,9 +209,30 @@ class ClipDataModule(BaseDataModule):
         self.use_random_embeddings = False
 
 
-    def _get_folders(self):
+    def _verify_paths(self):
+        """
+        Verify that the provided paths exist and are directories.
+
+        Raises:
+            OSError: If the path does not exist or is not a directory.
+        """
+        for phase, path in self.paths.items():
+            if not os.path.exists(path):
+                raise OSError(f'The specified path for phase {phase} does not exist.')
+            if not os.path.isdir(path):
+                raise OSError(f'The specified path for phase {phase} is not a directory.')
+
+
+    def _get_folders(self, phase : str) -> list[str]:
+        """
+        Walk over the dataset directory and get the list of class folders, which 
+        are the leaf subdirectories.
+
+        Returns:
+            list[str]: The list of class folders.
+        """
         folders = []
-        for dirpath, dirnames, filenames in os.walk(self.path):
+        for dirpath, dirnames, filenames in os.walk(self.paths[phase]):
             if not dirnames:
                 folders.append(dirpath)
         return folders
@@ -248,13 +248,16 @@ class ClipDataModule(BaseDataModule):
         Returns:
             MetaLearningClipIterableDataset: The created dataset.
         """
-        return MetaLearningClipIterableDataset(
-            data_folders=self.class_folders[phase],
-            way=self.way,
-            shot=self.shot,
-            batch_size=self.batch_size,
-            cache=True
-        )
+        if phase not in self.paths.keys():
+            return
+        else:
+            return MetaLearningClipIterableDataset(
+                data_folders=self.class_folders[phase],
+                way=self.way,
+                shot=self.shot,
+                batch_size=self.batch_size,
+                cache=True
+            )
 
 
     def _encode(self, x : torch.Tensor) -> torch.Tensor:
@@ -269,7 +272,7 @@ class ClipDataModule(BaseDataModule):
         """
         *d, c, h, w = x.shape # get the shape of the input tensor
         x = x.reshape(-1, c, h, w) # reshape the input tensor to be 4D
-        with torch.no_grad():
+        with torch.no_grad(): # disable gradient tracking
             x = self.encode(x) # encode using CLIP
         return x.reshape(*d, -1) # reshape the output tensor
 
@@ -304,8 +307,7 @@ class ClipDataModule(BaseDataModule):
 ## A quick test to make sure that it works
 def test():
     path = '/Users/hmblair/Documents/University/Graduate/Classes/CS330/FinalProject/Data/imagenet-tiny'
-    datamodule = ClipDataModule(path = path,
-                                split = [0.8, 0.1, 0.1],
+    datamodule = ClipDataModule(paths = {'train' : path},
                                 batch_size = 4,
                                 way = 2,
                                 shot = 2,
@@ -317,6 +319,7 @@ def test():
 
     for batch in train_dataloader:
         batch = datamodule.on_after_batch_transfer(batch, 0)
+        breakpoint()
 
 
 if __name__ == '__main__':
