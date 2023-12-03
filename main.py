@@ -63,7 +63,7 @@ if __name__ == '__main__':
         filename='best',
         monitor='val_loss',
         mode='min',
-        save_last=True
+        save_last=True,
         )
 
     # initialise the trainer
@@ -72,6 +72,7 @@ if __name__ == '__main__':
         max_epochs = args.max_epochs,
         precision = '16-mixed' if args.accelerator == 'gpu' else '32',
         logger = logger,
+        callbacks = [model_checkpoint],
         )
 
     # get the data path
@@ -85,14 +86,14 @@ if __name__ == '__main__':
     elif args.dataset == 'decathalon':
         from downloader import download_decathalon
         download_decathalon()
-        train_path = os.path.join('Data', 'decathlon', 'train')
-        val_path = os.path.join('Data', 'decathlon', 'val')
+        paths = {'train':  os.path.join('Data', 'decathlon', 'train'), 
+                 'val': os.path.join('Data', 'decathlon', 'val')}
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
     # initialise the data module
     datamodule = ClipDataModule(
-        paths = {'train': train_path, 'val': val_path},
+        paths = paths,
         batch_size = args.batch_size,
         way = args.way,
         shot = args.shot,
