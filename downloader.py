@@ -53,7 +53,7 @@ def download_decathalon():
         downloader_with_progress(url, zipped_file)
 
     # extract the dataset
-    if not os.path.exists('Data/imagenet12'):
+    if not os.path.exists('Data/decathlon'):
         print(f'Extracting {zipped_file}')
         with tarfile.open(zipped_file, 'r') as tar_ref:
             tar_ref.extractall('Data/')
