@@ -24,20 +24,19 @@ if __name__ == '__main__':
         from downloader import download_imagenet_tiny
         download_imagenet_tiny()
         data_path = os.path.join('Data', 'imagenet-tiny')
+        paths = {'test' : data_path}
     elif args.dataset == 'omniglot':
         warnings.warn('There is no downloader for omniglot.')
         data_path = os.path.join('Data', 'omniglot_resized')
     elif args.dataset == 'decathlon':
         from downloader import download_decathalon
         download_decathalon()
-        data_path = os.path.join('Data', 'decathlon-1.0-data-imagenet')
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
     # initialise the data module
     datamodule = ClipDataModule(
-        path = data_path,
-        split = [0.8, 0.1, 0.1],
+        paths = paths,
         batch_size = args.batch_size,
         way = args.way,
         shot = args.shot,
