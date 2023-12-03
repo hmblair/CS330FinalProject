@@ -24,9 +24,9 @@ class WarmupAndDecayLRScheduler(LRScheduler, metaclass=ABCMeta):
         _decay_step(): Calculates a decay step for the learning rate scheduler. An abstract method that must be implemented by subclasses.
         get_lr(): Get the learning rate for the current epoch (or step).
     """
-    def __init__(self, warmup_steps, **kwargs) -> None:
+    def __init__(self, warmup_steps, *args, **kwargs) -> None:
         self.warmup_steps = warmup_steps
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
 
     def get_lr(self) -> list[float]:
@@ -74,19 +74,15 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
     with a linear warmup.
 
     Parameters:
-        - d_model (int): The model dimension.
         - *args: Variable length argument list.
         - **kwargs: Arbitrary keyword arguments.
-
-    Attributes:
-        - scale_factor (float): The scale factor for the learning rate.
 
     Inherits:
         - WarmupAndDecayLRScheduler: Base class for learning rate schedulers that incorporate 
         warm-up and decay steps.
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         for group in self.optimizer.param_groups:
             group['lr'] = group['lr'] / (self.warmup_steps + 1)
 
@@ -123,7 +119,7 @@ class InverseSqrtLR(WarmupAndDecayLRScheduler):
         Returns:
         - float: The learning rate for the current decay step.
         """
-        scale = (self.last_epoch - self.warmup_steps + 2) / (self.last_epoch - self.warmup_steps + 1)
+        scale = (self.last_epoch + 2) / (self.last_epoch + 1)
         return [group['lr'] * (scale ** (-1/2)) for group in self.optimizer.param_groups]
 
 
