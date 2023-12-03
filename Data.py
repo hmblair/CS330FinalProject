@@ -54,9 +54,11 @@ class MetaLearningClipIterableDataset(IterableDataset):
         self.stored_images = {}
 
         # load the clip preprocessing function
-        _, preprocess = clip.load("ViT-B/32") 
+        encode, preprocess = clip.load("ViT-B/32") 
         self.preprocess = preprocess
+        self.encode = encode
     
+
 
     def _get_worker_info(self) -> tuple[int, int]:
         """
@@ -185,6 +187,7 @@ class ClipDataModule(BaseDataModule):
                  paths : dict[str, str],
                  way : int,
                  shot : int,
+                 cache : bool = True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -200,6 +203,7 @@ class ClipDataModule(BaseDataModule):
         # store the way and shot
         self.way = way
         self.shot = shot
+        self.cache = cache
 
         # initialize the CLIP model and get the embedding dimension
         encode, _ = clip.load('ViT-B/32')
@@ -256,7 +260,7 @@ class ClipDataModule(BaseDataModule):
                 way=self.way,
                 shot=self.shot,
                 batch_size=self.batch_size,
-                cache=True
+                cache=self.cache,
             )
 
 
