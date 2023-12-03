@@ -11,5 +11,5 @@ python3 main.py \
     --batch_size 16 \
     --way 5 \
     --shot 2 \
-    --dataset imagenet-tiny \
+    --dataset decathalon \
     --num_workers 0 \

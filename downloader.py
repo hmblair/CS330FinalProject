@@ -43,6 +43,28 @@ def download_imagenet_tiny():
 
 
 
+def download_decathalon():
+    # download the dataset
+    zipped_file = 'Data/decathlon-1.0-data-imagenet.tar'
+    if not os.path.exists(zipped_file):
+        url = 'https://image-net.org/data/decathlon-1.0-data-imagenet.tar'
+        downloader_with_progress(url, zipped_file)
+
+    # extract the dataset
+    if not os.path.exists('Data/decathlon-1.0-data-imagenet'):
+        print(f'Extracting {zipped_file}')
+        with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
+            zip_ref.extractall('Data/')
+
+    # rename the dataset
+    if not os.path.exists('Data/decathlon'):
+        shutil.move('Data/decathlon-1.0-data-imagenet', 'Data/decathlon')
+
+
+
+
+
+
 
 
 

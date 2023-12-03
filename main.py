@@ -58,11 +58,13 @@ if __name__ == '__main__':
     # initialise the logger and checkpoint callback
     log_dir = 'lightning_logs'
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-    model_checkpoint = ModelCheckpoint(dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
-                                        filename='best',
-                                        monitor='val_loss',
-                                        mode='min',
-                                        save_last=True)
+    model_checkpoint = ModelCheckpoint(
+        dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
+        filename='best',
+        monitor='val_loss',
+        mode='min',
+        save_last=True
+        )
 
     # initialise the trainer
     trainer = pl.Trainer(
@@ -80,6 +82,10 @@ if __name__ == '__main__':
     elif args.dataset == 'omniglot':
         warnings.warn('There is no downloader for omniglot.')
         data_path = os.path.join('Data', 'omniglot_resized')
+    elif args.dataset == 'decathlon':
+        from downloader import download_decathalon
+        download_decathalon()
+        data_path = os.path.join('Data', 'decathlon-1.0-data-imagenet')
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
