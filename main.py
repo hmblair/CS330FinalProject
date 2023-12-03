@@ -24,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
+    parser.add_argument('--cache', action='store_true')
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -98,6 +99,7 @@ if __name__ == '__main__':
         way = args.way,
         shot = args.shot,
         num_workers = args.num_workers,
+        cache = args.cache,
         )
 
     # initialise the model
