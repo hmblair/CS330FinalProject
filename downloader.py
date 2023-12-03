@@ -85,7 +85,7 @@ def download_indoor_scenes():
 
 
 def download_fruits():
-    warnings.warn('You must make this dataset manually. Place the train data in Data/fruits'.)
+    warnings.warn('You must make this dataset manually. Place the train data in Data/fruits.')
 
     
 
