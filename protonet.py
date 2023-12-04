@@ -13,7 +13,23 @@ class ProtoNet(BaseICLModel, metaclass=ABCMeta):
         _compute_features: Compute the ProtoNet embeddings for a given batch of features.
         forward: Compute the ProtoNet logits for a given batch of features.
     """
-    def _protonet_logits(self, prototypes : torch.Tensor) -> torch.Tensor:
+
+
+    def _cosine_similarity(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """
+        Compute the cosine similarity between two tensors.
+
+        Args:
+            x (torch.Tensor): The first tensor.
+            y (torch.Tensor): The second tensor.
+
+        Returns:
+            torch.Tensor: The cosine similarity between the two tensors.
+        """
+        return torch.sum(x * y, dim=-1) / (torch.norm(x, dim=-1) * torch.norm(y, dim=-1))
+
+
+    def _protonet_logits(self, support, query : torch.Tensor) -> torch.Tensor:
         """
         Compute the ProtoNet logits for a given tensor of prototypes. The last
         element of each batch is the query, and all other elements are classes.
@@ -24,9 +40,7 @@ class ProtoNet(BaseICLModel, metaclass=ABCMeta):
         Returns:
             torch.Tensor: The ProtoNet logits.
         """
-        query = prototypes[:, -1] # the query is the last element of each batch
-        classes = prototypes[:, :-1] # the classes are all but the last element of each batch
-        return -torch.sum( (query[:, None] - classes) ** 2, dim = -1) # compute the negative squared distances between the query and each class
+        return self._cosine_similarity(query[:, None], support) # compute the negative squared distances between the query and each class
     
 
     @abstractmethod
@@ -57,8 +71,12 @@ class ProtoNet(BaseICLModel, metaclass=ABCMeta):
 
         predicted_features = self._compute_features(x=features, mask=mask)
 
-        prototypes = torch.sum(predicted_features, dim=2) / torch.sum(~mask, dim=2)[..., None] # compute the prototypes for each class
-        return self._protonet_logits(prototypes) # compute the protonet logits
+        support_features = predicted_features[:, :-1] # the support features are all but the last element of each batch
+        query_features = predicted_features[:, -1, 0] # the query features are the last element of each batch and the first shot only
+        support_prototypes = torch.mean(support_features, dim=2) # compute the prototypes for each class
+
+        # prototypes = torch.sum(predicted_features, dim=2) / torch.sum(~mask, dim=2)[..., None] # compute the prototypes for each class
+        return self._protonet_logits(support_prototypes, query_features) # compute the protonet logits
 
 
 
@@ -102,9 +120,6 @@ class ProtoNetSkip(BaseICLTransformer, ProtoNet):
     """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
-        # initialise the last layer of the encoder to zero, so that the skip connection is initialized to the identity
-        self.encoder._init_last_layer_zero() 
 
 
     def _compute_features(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
