@@ -70,8 +70,8 @@ class BaseModel(pl.LightningModule):
         loss = self._compute_and_log_losses(batch, 'train') # compute the losses
         lr = self._get_lr() # get the learning rate
         self.log('lr', lr, prog_bar=True, on_step=True, sync_dist=True) # log the learning rate
-        process = psutil.Process()
-        self.log('mem_use', process.memory_info().rss, prog_bar=True, on_step=True, sync_dist=True) # log the learning rate
+        process = psutil.Process() # get the current process for discerning memory usage
+        self.log('mem_use', process.memory_info().rss, prog_bar=True, on_step=True, sync_dist=True) # log the memory usage
         return loss
     
 
@@ -188,7 +188,7 @@ class BaseModel(pl.LightningModule):
         Returns:
             None
         """
-        self.log(name, value, prog_bar=True, sync_dist=True, on_epoch=True, on_step=False, **kwargs)
+        self.log(name, value, prog_bar=True, sync_dist=True, on_epoch=True, on_step=True, **kwargs)
 
     
     def _validate_losses(self, loss : torch.Tensor, name : str) -> None:
