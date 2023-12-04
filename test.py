@@ -26,15 +26,13 @@ if __name__ == '__main__':
         download_imagenet_tiny()
         data_path = os.path.join('Data', 'imagenet-tiny')
         paths = {'test' : data_path}
-    elif args.dataset == 'indoor_scenes':
-        from downloader import download_indoor_scenes
-        download_indoor_scenes()
-        data_path = os.path.join('Data', 'indoor_scenes')
-        paths = {'test' : data_path}
-    elif args.dataset == 'fruits':
-        from downloader import download_fruits
-        download_fruits()
-        data_path = os.path.join('Data', 'fruits')
+    elif args.dataset == 'omniglot':
+        warnings.warn('There is no downloader for omniglot.')
+        data_path = os.path.join('Data', 'omniglot_resized')
+    elif args.dataset == 'decathlon':
+        from downloader import download_decathalon
+        download_decathalon()
+        data_path = os.path.join('Data', 'decathlon')
         paths = {'test' : data_path}
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
