@@ -102,6 +102,8 @@ if __name__ == '__main__':
         cache = args.cache,
         )
     
+    # for the learning rate scheduler
+    datamodule.setup('fit')
     steps_per_epoch = len(datamodule.train_dataloader())
     warmup_steps = args.learning_rate_warmup_epochs * steps_per_epoch
 
@@ -139,4 +141,3 @@ if __name__ == '__main__':
     else:
         raise ValueError(f'Invalid mode {args.mode}')
     
-
