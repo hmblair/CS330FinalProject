@@ -149,7 +149,7 @@ class MetaLearningClipIterableDataset(IterableDataset):
 
         # calculate the number of files in the dataset
         num_files = sum([len([name for name in os.listdir(path)]) for path in self.data_folders])
-        return num_files // (self.way * self.shot * num_workers)
+        return num_files // (self.way * self.shot * num_workers / 16)
     
 
 
