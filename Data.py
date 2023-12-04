@@ -10,7 +10,6 @@ from PIL import Image
 
 from base import BaseDataModule
 from random import shuffle
-from distributed_helper import distributed_breakpoint
 
 
 class MetaLearningClipIterableDataset(IterableDataset):
@@ -21,7 +20,6 @@ class MetaLearningClipIterableDataset(IterableDataset):
         data_folders (list[str]): The list of folders containing the data.
         way (int): The number of classes per batch.
         shot (int): The number of examples per class per batch.
-        batch_size (int): The size of the batch.
         cache (bool): Whether to cache the images in memory.
 
     Methods:
@@ -33,7 +31,6 @@ class MetaLearningClipIterableDataset(IterableDataset):
     Attributes:
         way (int): The number of classes per batch.
         shot (int): The number of examples per class per batch.
-        batch_size (int): The size of the batch.
         data_folders (list[str]): The list of folders containing the data.
         image_caching (bool): Whether to cache the images in memory.
         stored_images (dict[str, torch.Tensor]): Dictionary of image paths to cached images.
@@ -43,22 +40,18 @@ class MetaLearningClipIterableDataset(IterableDataset):
                  data_folders : list[str],
                  way : int,
                  shot : int,
-                 batch_size : int,
                  cache : bool = True):
         self.way = way # number of classes per batch
         self.shot = shot # number of examples per class
-        self.batch_size = batch_size # size of the batch
         self.data_folders = data_folders # list of folders containing the data
 
         self.image_caching = cache # whether to cache images in memory
         self.stored_images = {}
 
         # load the clip preprocessing function
-        encode, preprocess = clip.load("ViT-B/32") 
+        _, preprocess = clip.load("ViT-B/32") 
         self.preprocess = preprocess
-        self.encode = encode
     
-
 
     def _get_worker_info(self) -> tuple[int, int]:
         """
@@ -156,8 +149,45 @@ class MetaLearningClipIterableDataset(IterableDataset):
 
         # calculate the number of files in the dataset
         num_files = sum([len([name for name in os.listdir(path)]) for path in self.data_folders])
-        return num_files // (self.way * self.shot * self.batch_size * num_workers)
+        return num_files // (self.way * self.shot * num_workers)
     
+
+
+class RandomIterableDataset(IterableDataset):
+    def __init__(self, way : int, shot : int, embedding_dim : int, len : int):
+        self.way = way
+        self.shot = shot
+        self.embedding_dim = embedding_dim
+        self.len = len
+    
+
+    def __iter__(self):
+        counter = 0
+        while counter < self.len:
+            yield self._sample()
+            counter += 1
+    
+
+    def _sample(self):
+        files = []
+        for _ in range(self.way):
+            files.append(self._random_clip_embeddings())
+        files.append(self._random_clip_embeddings())
+        labels = list(range(self.way))
+        labels += [labels[-1]]
+        return torch.stack(files), torch.tensor(labels)
+    
+
+    def _random_clip_embeddings(self):
+        return torch.randn(self.shot, self.embedding_dim)
+    
+
+    def __len__(self):
+        return self.len
+
+
+
+
 
 
 class ClipDataModule(BaseDataModule):
@@ -188,6 +218,7 @@ class ClipDataModule(BaseDataModule):
                  way : int,
                  shot : int,
                  cache : bool = True,
+                 use_clip : bool = True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -204,6 +235,7 @@ class ClipDataModule(BaseDataModule):
         self.way = way
         self.shot = shot
         self.cache = cache
+        self.use_clip = use_clip
 
         # initialize the CLIP model and get the embedding dimension
         encode, _ = clip.load('ViT-B/32')
@@ -259,7 +291,6 @@ class ClipDataModule(BaseDataModule):
                 data_folders=self.class_folders[phase],
                 way=self.way,
                 shot=self.shot,
-                batch_size=self.batch_size,
                 cache=self.cache,
             )
 
@@ -292,39 +323,43 @@ class ClipDataModule(BaseDataModule):
         Returns:
                 tuple[torch.Tensor, torch.Tensor]: The encoded batch and the corresponding labels.
         """
-        if self.use_random_embeddings:
-            return self._random_clip_embeddings(), batch[1]
-        else:
+        if self.use_clip:
             return self._encode(batch[0]), batch[1]
+        else:
+            return batch[0], batch[1]
 
 
-    ## BHARGAV: Implement this
-    def _random_clip_embeddings(self):
-        """
-        Generate random clip embeddings for the classes.
-        """
-        raise NotImplementedError
-
-
-
-
-## A quick test to make sure that it works
-def test():
-    path = '/Users/hmblair/Documents/University/Graduate/Classes/CS330/FinalProject/Data/imagenet-tiny'
-    datamodule = ClipDataModule(paths = {'train' : path},
-                                batch_size = 4,
-                                way = 2,
-                                shot = 2,
-                                num_workers = 0)
-
-    datamodule.setup('fit')
-
-    train_dataloader = datamodule.train_dataloader()
-
-    for batch in train_dataloader:
-        batch = datamodule.on_after_batch_transfer(batch, 0)
-        breakpoint()
 
 
 if __name__ == '__main__':
-    test()
+
+    from protonet import ProtoNetICL
+
+    model = ProtoNetICL(
+        num_layers=1,
+        num_heads=1,
+        hidden_dim=512,
+        mlp_dim=256,
+        warmup_steps=1000,
+        )
+
+    datamodule = ClipDataModule(
+        paths = {'train' : os.path.join('Data', 'imagenet-tiny')},
+        batch_size = 5,
+        way = 5,
+        shot = 5,
+        num_workers = 0,
+        )
+    
+    datamodule.setup('fit')
+    dataloader = datamodule.train_dataloader()
+
+    accuracy = []
+    for n, i in enumerate(dataloader):
+        i = datamodule.on_after_batch_transfer(i, 0)
+        dct = model._compute_losses(i)
+        accuracy.append(dct['accuracy'])
+        if n == 100:
+            break
+
+    print(torch.mean(torch.stack(accuracy)))
