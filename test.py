@@ -48,7 +48,7 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         accelerator = args.accelerator,
         precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-        logger = None,
+        logger = False,
         )
 
     for way, shot in product(args.way, args.shot):
