@@ -8,6 +8,15 @@ import os
 import warnings
 from itertools import product
 
+def init_model(model_name):
+    if model_name == 'ProtoNetICL':
+        return ProtoNetICL
+    elif model_name == 'ProtoNetWithoutEncoder':
+        return ProtoNetWithoutEncoder
+    else:
+        raise ValueError(f'Invalid model name {model_name}')
+
+
 if __name__ == '__main__':
     if not os.path.exists('results'):
         os.makedirs('results')
@@ -57,6 +66,9 @@ if __name__ == '__main__':
         logger = False,
         )
 
+    import pandas as pd
+    data = pd.DataFrame(columns=['model', 'way', 'shot', 'test_accuracy'])
+
     for way, shot in product(args.way, args.shot):
         # initialise the data module
         datamodule = ClipDataModule(
@@ -68,10 +80,6 @@ if __name__ == '__main__':
             subepoch_factor=args.subepoch_factor,
             )
         
-
-        import pandas as pd
-        data = pd.DataFrame(columns=['model', 'way', 'shot', 'test_accuracy'])
-        
         # test the models in the given folder
         for dir in os.listdir(args.model_folder):
             if os.path.isfile(dir):
@@ -80,12 +88,7 @@ if __name__ == '__main__':
             ckpt_dir = os.path.join(args.model_folder, dir, 'checkpoints', 'last.ckpt')
 
             # initialise the model
-            if model_name == 'ProtoNetICL':
-                model = ProtoNetICL
-            elif model_name == 'ProtoNetWithoutEncoder':
-                model = ProtoNetWithoutEncoder
-            else:
-                raise ValueError(f'Invalid model name {model_name}')
+            model = init_model(model_name)
 
             # load the model
             model = model.load_from_checkpoint(ckpt_dir)
@@ -109,5 +112,5 @@ if __name__ == '__main__':
         )
         data = pd.concat([data, df2], ignore_index=True)
 
-    data.to_csv('results.csv')
+    data.to_csv('results/results.csv')
 
