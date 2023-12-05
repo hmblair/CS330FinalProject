@@ -222,6 +222,7 @@ class ClipDataModule(BaseDataModule):
                  shot : int,
                  cache : bool = True,
                  use_clip : bool = True,
+                 subepoch_factor : int = 16,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -246,6 +247,7 @@ class ClipDataModule(BaseDataModule):
         self.embedding_dim = encode.visual.output_dim
 
         self.use_random_embeddings = False
+        self.subepoch_factor = subepoch_factor
 
 
     def _verify_paths(self):
@@ -295,6 +297,7 @@ class ClipDataModule(BaseDataModule):
                 way=self.way,
                 shot=self.shot,
                 cache=self.cache,
+                subepoch_factor=self.subepoch_factor,
             )
 
 

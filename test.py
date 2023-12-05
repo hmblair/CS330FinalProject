@@ -59,6 +59,7 @@ if __name__ == '__main__':
             way = way,
             shot = shot,
             num_workers = args.num_workers,
+            subepoch_factor=2,
             )
         
 
@@ -94,7 +95,7 @@ if __name__ == '__main__':
 
 
         # test ProtoNetWithoutEncoder
-        print(f'Testing ProtoNetWithoutEncoder on {args.dataset} with {args.way}-way {args.shot}-shot')
+        print(f'Testing ProtoNetWithoutEncoder on {args.dataset} with {way}-way {shot}-shot')
         model = ProtoNetWithoutEncoder()
         df2 = pd.DataFrame(
             data = [['ProtoNetWithoutEncoder', way, shot, trainer.test(model, datamodule)[0]['test_accuracy_epoch']]],
