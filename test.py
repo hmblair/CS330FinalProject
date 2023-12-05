@@ -44,6 +44,12 @@ if __name__ == '__main__':
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
     
+    # initialise the trainer
+    trainer = pl.Trainer(
+        accelerator = args.accelerator,
+        precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+        logger = None,
+        )
 
     for way, shot in product(args.way, args.shot):
         # initialise the data module
@@ -65,13 +71,6 @@ if __name__ == '__main__':
                 continue
             model_name = dir.split('_')[0]
             ckpt_dir = os.path.join(args.model_folder, dir, 'checkpoints', 'last.ckpt')
-
-            # initialise the trainer
-            trainer = pl.Trainer(
-                accelerator = args.accelerator,
-                precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-                logger = None,
-                )
 
             # initialise the model
             if model_name == 'ProtoNetICL':
@@ -95,12 +94,6 @@ if __name__ == '__main__':
 
 
         # test ProtoNetWithoutEncoder
-        trainer = pl.Trainer(
-            accelerator = args.accelerator,
-            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-            logger = None,
-            )
-        
         print(f'Testing ProtoNetWithoutEncoder on {args.dataset} with {args.way}-way {args.shot}-shot')
         model = ProtoNetWithoutEncoder()
         df2 = pd.DataFrame(
