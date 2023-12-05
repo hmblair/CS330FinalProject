@@ -67,13 +67,15 @@ def plot_results():
         plt.style.use("ggplot")
         plt.figure()
         for model in group['model'].unique():
-            plt.plot(group[group['model'] == model]['way'], group[group['model'] == model]['test_accuracy'], label=legend_dict[model] if leg else None)
+            plt.plot(group[group['model'] == model]['way'], group[group['model'] == model]['test_accuracy'], label=legend_dict[model] if leg else None,
+                     linewidth=4.0)
         leg = False
+        plt.ylim(0,1)
         plt.xlabel("Way")
         plt.xticks([2, 5, 10])
         plt.ylabel("Test Accuracy")
         plt.legend(loc='lower left')
-        plt.savefig(f'figures/{name}_shot.png', dpi=300)
+        plt.savefig(f'figures/{name}_shot.png', dpi=300, transparent=True)
     
 
 if __name__ == "__main__":
