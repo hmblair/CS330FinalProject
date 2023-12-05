@@ -85,7 +85,21 @@ def download_indoor_scenes():
 
 
 def download_fruits():
-    warnings.warn('You must make this dataset manually. Place the train data in Data/fruits.')
+    # download the dataset
+    zipped_file = 'Data/fruits-360_dataset.zip'
+    if not os.path.exists(zipped_file):
+        url = 'https://data.mendeley.com/public-files/datasets/rp73yg93n8/files/56487963-3773-495e-a4fc-c1862b6daf91/file_downloaded'
+        downloader_with_progress(url, zipped_file)
+
+    # extract the dataset
+    if not os.path.exists('Data/fruits'):
+        print(f'Extracting {zipped_file}')
+        with zipfile.ZipFile(zipped_file, 'r') as zip_ref:
+            zip_ref.extractall('Data/')
+
+    # rename the dataset
+    if not os.path.exists('Data/fruits'):
+        shutil.move('Data/fruits-360/Training', 'Data/fruits')
 
     
 
