@@ -102,6 +102,5 @@ if __name__ == '__main__':
         )
         data = pd.concat([data, df2], ignore_index=True)
 
-        print(data)
-        data.to_csv('results.csv')
+    data.to_csv('results.csv')
 
