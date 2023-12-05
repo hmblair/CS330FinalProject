@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
+    parser.add_argument('--subepoch_factor', type=int, default=2)
     args = parser.parse_args()
 
     # get the data path
@@ -41,6 +42,11 @@ if __name__ == '__main__':
         download_indoor_scenes()
         data_path = os.path.join('Data', 'indoor_scenes')
         paths = {'test' : data_path}
+    elif args.dataset == 'fruits':
+        from downloader import download_fruits
+        download_fruits()
+        data_path = os.path.join('Data', 'fruits')
+        paths = {'test' : data_path}
     else: 
         raise ValueError(f'Invalid dataset name {args.dataset}')
     
@@ -59,7 +65,7 @@ if __name__ == '__main__':
             way = way,
             shot = shot,
             num_workers = args.num_workers,
-            subepoch_factor=2,
+            subepoch_factor=args.subepoch_factor,
             )
         
 
