@@ -40,7 +40,8 @@ class MetaLearningClipIterableDataset(IterableDataset):
                  data_folders : list[str],
                  way : int,
                  shot : int,
-                 cache : bool = True):
+                 cache : bool = True,
+                 subepoch_factor : int = 16):
         self.way = way # number of classes per batch
         self.shot = shot # number of examples per class
         self.data_folders = data_folders # list of folders containing the data
@@ -51,6 +52,8 @@ class MetaLearningClipIterableDataset(IterableDataset):
         # load the clip preprocessing function
         _, preprocess = clip.load("ViT-B/32") 
         self.preprocess = preprocess
+
+        self.subepoch_factor = subepoch_factor
     
 
     def _get_worker_info(self) -> tuple[int, int]:
@@ -149,7 +152,7 @@ class MetaLearningClipIterableDataset(IterableDataset):
 
         # calculate the number of files in the dataset
         num_files = sum([len([name for name in os.listdir(path)]) for path in self.data_folders])
-        return num_files // (self.way * self.shot * num_workers * 16)
+        return num_files // (self.way * self.shot * num_workers * self.subepoch_factor)
     
 
 
@@ -238,7 +241,7 @@ class ClipDataModule(BaseDataModule):
         self.use_clip = use_clip
 
         # initialize the CLIP model and get the embedding dimension
-        encode, _ = clip.load('ViT-B/32')
+        encode, _ = clip.load('ViT-B/32', device='cpu' if not torch.cuda.is_available() else 'cuda')
         self.encode = encode.encode_image
         self.embedding_dim = encode.visual.output_dim
 
