@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--cache', action='store_true')
     parser.add_argument('--model_folder', type=str)
     parser.add_argument('--model_name', type=str)
+    parser.add_argument('--subepoch_factor', type=int, default=2)
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -57,7 +58,7 @@ if __name__ == '__main__':
 
 
     #if no loading folder specified, initialize model checkpoint and trainer
-    if not args.model_folder:
+    if not model_folder:
         # get the model name from the hyperparameters
         if not args.model_name:
             model_name = get_model_name(args)
@@ -122,6 +123,7 @@ if __name__ == '__main__':
         shot = args.shot,
         num_workers = args.num_workers,
         cache = args.cache,
+        subepoch_factor=args.subepoch_factor
         )
 
     # for the learning rate scheduler
