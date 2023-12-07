@@ -54,24 +54,24 @@ if __name__ == '__main__':
     ## TODO: Make the dataloader deterministic (so it loops over the entire dataset exactly once per epoch) (Hamish)
     ## TODO: Make the dataset work with multiple GPUS (Hamish)
 
+    log_dir = 'lightning_logs'
 
+    #take model name from arguments, or if not specified create one.
     if not args.model_name:
         model_name = get_model_name(args)
     else:
         model_name = args.model_name
 
-    #if no loading folder specified, initialize model checkpoint and trainer
+    #if no loading folder specified, create path
     if not args.model_folder:
-        # get the model name from the hyperparameters
         checkpoint_path = None
         model_folder = os.path.join(log_dir, model_name)
 
+    #else setup for model loading
     else:
         checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'last.ckpt')
         model_folder = args.model_folder
 
-
-    log_dir = 'lightning_logs'
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
 
     model_checkpoint = ModelCheckpoint(
