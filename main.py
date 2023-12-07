@@ -25,7 +25,8 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache', action='store_true')
-    parser.add_argument('--model_folder', type=str')
+    parser.add_argument('--model_folder', type=str)
+    parser.add_argument('--model_name', type=str)
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -56,9 +57,12 @@ if __name__ == '__main__':
 
 
     #if no loading folder specified, initialize model checkpoint and trainer
-    if(!model_folder):
+    if not args.model_folder:
         # get the model name from the hyperparameters
-        model_name = get_model_name(args)
+        if not args.model_name:
+            model_name = get_model_name(args)
+        else:
+            model_name = args.model_name
 
         # initialise the logger and checkpoint callback
         log_dir = 'lightning_logs'
