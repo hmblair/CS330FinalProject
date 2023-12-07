@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache', action='store_true')
+    parser.add_argument('--model_folder', type=str')
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -33,13 +34,12 @@ if __name__ == '__main__':
         """
         ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache']
         return '_'.join(
-            [str(getattr(args, arg)) 
-                for arg in vars(args) 
+            [str(getattr(args, arg))
+                for arg in vars(args)
                 if getattr(args, arg) is not None
                 and arg not in ignore_args
             ]
                 )
-
 
     ## Priority:
     ## TODO: pass through random clip vectors to see hw it performs (Bhargav)
@@ -53,28 +53,46 @@ if __name__ == '__main__':
     ## TODO: Make the dataset work with multiple GPUS (Hamish)
 
 
-    # get the model name from the hyperparameters
-    model_name = get_model_name(args)
 
-    # initialise the logger and checkpoint callback
-    log_dir = 'lightning_logs'
-    logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-    model_checkpoint = ModelCheckpoint(
-        dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
-        filename='best',
-        monitor='val_loss',
-        mode='min',
-        save_last=True,
-        )
 
-    # initialise the trainer
-    trainer = pl.Trainer(
-        accelerator = args.accelerator,
-        max_epochs = args.max_epochs,
-        precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-        logger = logger,
-        callbacks = [model_checkpoint],
-        )
+    #if no loading folder specified, initialize model checkpoint and trainer
+    if(!model_folder):
+        # get the model name from the hyperparameters
+        model_name = get_model_name(args)
+
+        # initialise the logger and checkpoint callback
+        log_dir = 'lightning_logs'
+        logger = TensorBoardLogger(log_dir, name=model_name, version=0)
+        model_checkpoint = ModelCheckpoint(
+            dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
+            filename='best',
+            monitor='val_loss',
+            mode='min',
+            save_last=True,
+            )
+
+        # initialise the trainer
+        trainer = pl.Trainer(
+            accelerator = args.accelerator,
+            max_epochs = args.max_epochs,
+            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+            logger = logger,
+            callbacks = [model_checkpoint],
+            )
+
+    else:
+        #load from folder
+
+        # initialise the logger and checkpoint callback
+        log_dir = os.path.dirname(model_folder)
+        model_name = os.path.basename(model_folder)
+        logger = TensorBoardLogger(log_dir, name=model_name, version=0)
+
+        checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'best.ckpt')
+
+        trainer = pl.Trainer(resume_from_checkpoint=checkpoint_path)
+
+
 
     # get the data path
     if args.dataset == 'imagenet-tiny':
@@ -87,9 +105,9 @@ if __name__ == '__main__':
     elif args.dataset == 'decathalon':
         from downloader import download_decathalon
         download_decathalon()
-        paths = {'train':  os.path.join('Data', 'decathlon', 'train'), 
+        paths = {'train':  os.path.join('Data', 'decathlon', 'train'),
                  'val': os.path.join('Data', 'decathlon', 'val')}
-    else: 
+    else:
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
     # initialise the data module
@@ -101,7 +119,7 @@ if __name__ == '__main__':
         num_workers = args.num_workers,
         cache = args.cache,
         )
-    
+
     # for the learning rate scheduler
     datamodule.setup('fit')
     steps_per_epoch = len(datamodule.train_dataloader())
@@ -140,4 +158,3 @@ if __name__ == '__main__':
         trainer.test(model, datamodule)
     else:
         raise ValueError(f'Invalid mode {args.mode}')
-    
