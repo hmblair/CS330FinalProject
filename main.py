@@ -68,27 +68,28 @@ if __name__ == '__main__':
         # initialise the logger and checkpoint callback
         log_dir = 'lightning_logs'
         logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-        model_checkpoint = ModelCheckpoint(
-            dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
-            filename='best',
-            monitor='val_loss',
-            mode='min',
-            save_last=True,
-            )
+
         checkpoint_path = None
 
-        trainer = pl.Trainer(
-            accelerator = args.accelerator,
-            max_epochs = args.max_epochs,
-            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-            logger = logger,
-            callbacks = [model_checkpoint],
-            )
-
     else:
-        #initialize empty Trainer, it will load when we call trainer.fit
-        trainer = pl.Trainer()
         checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'last.ckpt')
+
+
+    model_checkpoint = ModelCheckpoint(
+        dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
+        filename='best',
+        monitor='val_loss',
+        mode='min',
+        save_last=True,
+        )
+
+    trainer = pl.Trainer(
+        accelerator = args.accelerator,
+        max_epochs = args.max_epochs,
+        precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+        logger = logger,
+        callbacks = [model_checkpoint],
+        )
 
         # initialise the logger and checkpoint callback
     #     log_dir = os.path.dirname(args.model_folder)
