@@ -75,27 +75,26 @@ if __name__ == '__main__':
             mode='min',
             save_last=True,
             )
-
-        # initialise the trainer
-        trainer = pl.Trainer(
-            accelerator = args.accelerator,
-            max_epochs = args.max_epochs,
-            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-            logger = logger,
-            callbacks = [model_checkpoint],
-            )
+        checkpont_path = None
 
     else:
-        #load from folder
+        #initialize empty Trainer, it will load when we call trainer.fit
+        trainer = pl.Trainer()
+        checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'last.ckpt')
 
         # initialise the logger and checkpoint callback
-        log_dir = os.path.dirname(args.model_folder)
-        model_name = os.path.basename(args.model_folder)
-        logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-
-        checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'best.ckpt')
-
-        trainer = pl.Trainer(resume_from_checkpoint=checkpoint_path)
+    #     log_dir = os.path.dirname(args.model_folder)
+    #     model_name = os.path.basename(args.model_folder)
+    #     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
+    #
+    # # initialise the trainer
+    # trainer = pl.Trainer(
+    #     accelerator = args.accelerator,
+    #     max_epochs = args.max_epochs,
+    #     precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+    #     logger = logger,
+    #     callbacks = [model_checkpoint],
+    #     )
 
 
 
@@ -159,8 +158,8 @@ if __name__ == '__main__':
 
     # run the given mode
     if args.mode == 'train':
-        trainer.fit(model, datamodule)
+        trainer.fit(model, datamodule, ckpt_path = checkpoint_path)
     elif args.mode == 'test':
-        trainer.test(model, datamodule)
+        trainer.test(model, datamodule, ckpt_path = checkpoint_path)
     else:
         raise ValueError(f'Invalid mode {args.mode}')
