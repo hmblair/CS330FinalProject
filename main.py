@@ -65,9 +65,6 @@ if __name__ == '__main__':
         else:
             model_name = args.model_name
 
-        log_dir = 'lightning_logs'
-        logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-
         checkpoint_path = None
         model_folder = os.path.join(log_dir, model_name)
 
@@ -75,6 +72,9 @@ if __name__ == '__main__':
         checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'last.ckpt')
         model_folder = args.model_folder
 
+
+    log_dir = 'lightning_logs'
+    logger = TensorBoardLogger(log_dir, name=model_name, version=0)
 
     model_checkpoint = ModelCheckpoint(
         dirpath=os.path.join(model_folder, 'checkpoints'),
