@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 
     #if no loading folder specified, initialize model checkpoint and trainer
-    if not model_folder:
+    if not args.model_folder:
         # get the model name from the hyperparameters
         if not args.model_name:
             model_name = get_model_name(args)
@@ -89,8 +89,8 @@ if __name__ == '__main__':
         #load from folder
 
         # initialise the logger and checkpoint callback
-        log_dir = os.path.dirname(model_folder)
-        model_name = os.path.basename(model_folder)
+        log_dir = os.path.dirname(args.model_folder)
+        model_name = os.path.basename(args.model_folder)
         logger = TensorBoardLogger(log_dir, name=model_name, version=0)
 
         checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'best.ckpt')
