@@ -75,7 +75,15 @@ if __name__ == '__main__':
             mode='min',
             save_last=True,
             )
-        checkpont_path = None
+        checkpoint_path = None
+
+        trainer = pl.Trainer(
+            accelerator = args.accelerator,
+            max_epochs = args.max_epochs,
+            precision = '16-mixed' if args.accelerator == 'gpu' else '32',
+            logger = logger,
+            callbacks = [model_checkpoint],
+            )
 
     else:
         #initialize empty Trainer, it will load when we call trainer.fit
@@ -87,14 +95,9 @@ if __name__ == '__main__':
     #     model_name = os.path.basename(args.model_folder)
     #     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
     #
-    # # initialise the trainer
-    # trainer = pl.Trainer(
-    #     accelerator = args.accelerator,
-    #     max_epochs = args.max_epochs,
-    #     precision = '16-mixed' if args.accelerator == 'gpu' else '32',
-    #     logger = logger,
-    #     callbacks = [model_checkpoint],
-    #     )
+    # initialise the trainer
+
+
 
 
 
