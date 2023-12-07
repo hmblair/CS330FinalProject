@@ -55,16 +55,14 @@ if __name__ == '__main__':
     ## TODO: Make the dataset work with multiple GPUS (Hamish)
 
 
-
+    if not args.model_name:
+        model_name = get_model_name(args)
+    else:
+        model_name = args.model_name
 
     #if no loading folder specified, initialize model checkpoint and trainer
     if not args.model_folder:
         # get the model name from the hyperparameters
-        if not args.model_name:
-            model_name = get_model_name(args)
-        else:
-            model_name = args.model_name
-
         checkpoint_path = None
         model_folder = os.path.join(log_dir, model_name)
 
