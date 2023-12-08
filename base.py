@@ -41,7 +41,7 @@ class BaseModel(pl.LightningModule):
             Any: The output of the model.
         """
         return super().forward(*args, **kwargs)
-    
+
 
     def _weight_init(self) -> None:
         """
@@ -73,7 +73,7 @@ class BaseModel(pl.LightningModule):
         process = psutil.Process() # get the current process for discerning memory usage
         self.log('mem_use', process.memory_info().rss, prog_bar=True, on_step=True, sync_dist=True) # log the memory usage
         return loss
-    
+
 
     def validation_step(self, batch : torch.Tensor, batch_ix : list[int]) -> None:
         """
@@ -85,7 +85,7 @@ class BaseModel(pl.LightningModule):
         """
         _ = self._compute_and_log_losses(batch, 'val') # compute the losses
 
-    
+
     def test_step(self, batch : torch.Tensor, batch_ix : list[int]) -> None:
         """
         Perform a test step on a batch of data.
@@ -106,9 +106,9 @@ class BaseModel(pl.LightningModule):
             batch_ix (int): The index of the batch.
 
         Returns:
-            torch.Tensor: The predicted outputs from the model 
+            torch.Tensor: The predicted outputs from the model
             for the batch.
-        """ 
+        """
         # HOW TO LOG THE LOSSES IN AN EFFECTIVE MANNER?
         x, _ = self._get_inputs_and_outputs(batch) # get the input from the batch
         return self(x) # return the predictions
@@ -117,7 +117,7 @@ class BaseModel(pl.LightningModule):
     def configure_optimizers(self) -> dict:
         """
         Configures the optimizer and learning rate scheduler for the model.
-        
+
         Returns:
             dict: A dictionary containing the optimizer, learning rate scheduler, and monitor
             for the scheduler.
@@ -131,7 +131,7 @@ class BaseModel(pl.LightningModule):
         else:
             scheduler_dict = {'scheduler': scheduler, 'interval': 'step', 'frequency': 1}
             return {'optimizer': optimizer,'lr_scheduler': scheduler_dict}
-        
+
 
     def on_train_epoch_start(self) -> None:
         """
@@ -139,11 +139,11 @@ class BaseModel(pl.LightningModule):
         progress bars.
         """
         distributed_print('\n')
-    
+
 
     def _compute_and_log_losses(self, batch : torch.Tensor, phase : str) -> torch.Tensor:
         """
-        Compute the relevant losses and log them, returning the loss that is 
+        Compute the relevant losses and log them, returning the loss that is
         required for training.
 
         Args:
@@ -174,7 +174,7 @@ class BaseModel(pl.LightningModule):
             losses and their respective names.
         """
         raise NotImplementedError('The _compute_loss method must be implemented.')
-    
+
 
     def _log(self, name: str, value: torch.Tensor, **kwargs) -> None:
         """
@@ -190,7 +190,7 @@ class BaseModel(pl.LightningModule):
         """
         self.log(name, value, prog_bar=True, sync_dist=True, on_epoch=True, on_step=True, **kwargs)
 
-    
+
     def _validate_losses(self, loss : torch.Tensor, name : str) -> None:
         """
         Validates the loss value to ensure it is not NaN, infinite, or negative.
@@ -219,12 +219,12 @@ class BaseModel(pl.LightningModule):
 
         Returns:
             tuple(torch.Tensor, torch.Tensor): The inputs and corresponding outputs.
-        
+
         Examples:
             >>> x, y = self._get_inputs_and_outputs(batch)
         """
         raise NotImplementedError('The _get_inputs_and_outputs method must be implemented.')
-    
+
 
     def _get_optimizer(self) -> torch.optim.Optimizer:
         """
@@ -234,7 +234,7 @@ class BaseModel(pl.LightningModule):
             torch.optim.Optimizer: The optimizer for the model.
         """
         raise NotImplementedError('The _get_optimizer method must be implemented.')
-        
+
 
     def _get_scheduler(self, optimizer : torch.optim.Optimizer) -> Optional[torch.optim.lr_scheduler._LRScheduler]:
         """
@@ -244,8 +244,8 @@ class BaseModel(pl.LightningModule):
             scheduler | None: The learning rate scheduler. If None, no scheduler will be used.
         """
         return None
-        
-    
+
+
     def _get_lr(self) -> float:
         """
         Retrieves the current learning rate.
@@ -254,7 +254,7 @@ class BaseModel(pl.LightningModule):
             float: The current learning rate.
         """
         return self.optimizers().param_groups[0]["lr"]
-    
+
 
 
 
@@ -342,8 +342,8 @@ class BaseDataModule(pl.LightningDataModule, metaclass = ABCMeta):
         Returns:
             torch.utils.data.Dataset: The dataset for the specified phase.
         """
-        return   
-    
+        return
+
 
     def setup(self, stage: str) -> None:
         """
@@ -401,7 +401,7 @@ class BaseDataModule(pl.LightningDataModule, metaclass = ABCMeta):
         Returns:
             torch.utils.data.DataLoader: The prediction dataloader.
         """
-        return self._create_dataloaders('predict')     
+        return self._create_dataloaders('predict')
 
 
     def _create_dataloaders(self, phase: str):

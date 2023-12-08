@@ -25,6 +25,9 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache', action='store_true')
+    parser.add_argument('--model_name', type=str)
+    parser.add_argument('--subepoch_factor', type=int, default=2)
+    parser.add_argument('--load_version', type=int, default=-1)
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -33,13 +36,12 @@ if __name__ == '__main__':
         """
         ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache']
         return '_'.join(
-            [str(getattr(args, arg)) 
-                for arg in vars(args) 
+            [str(getattr(args, arg))
+                for arg in vars(args)
                 if getattr(args, arg) is not None
                 and arg not in ignore_args
             ]
                 )
-
 
     ## Priority:
     ## TODO: pass through random clip vectors to see hw it performs (Bhargav)
@@ -52,22 +54,40 @@ if __name__ == '__main__':
     ## TODO: Make the dataloader deterministic (so it loops over the entire dataset exactly once per epoch) (Hamish)
     ## TODO: Make the dataset work with multiple GPUS (Hamish)
 
-
-    # get the model name from the hyperparameters
-    model_name = get_model_name(args)
-
-    # initialise the logger and checkpoint callback
     log_dir = 'lightning_logs'
+
+    #take model name from arguments, or if not specified create one.
+    if not args.model_name:
+        model_name = get_model_name(args)
+    else:
+        model_name = args.model_name
+
+    model_folder = os.path.join(log_dir, model_name)
+
+    #if not loading, setup for new model creation.
+    if args.load_version < 0:
+        checkpoint_path = None
+
+    #else setup for model loading
+    else:
+        if args.load_version == 0:
+            path_end = 'last.ckpt'
+        else:
+            path_end = 'last-v{}.ckpt'.format(args.load_version)
+
+        checkpoint_path = os.path.join(model_folder, 'checkpoints', path_end)
+        print("loading version {} from model {}".format(args.load_version, model_name))
+
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
+
     model_checkpoint = ModelCheckpoint(
-        dirpath=os.path.join(log_dir, model_name, 'checkpoints'),
+        dirpath=os.path.join(model_folder, 'checkpoints'),
         filename='best',
         monitor='val_loss',
         mode='min',
         save_last=True,
         )
 
-    # initialise the trainer
     trainer = pl.Trainer(
         accelerator = args.accelerator,
         max_epochs = args.max_epochs,
@@ -87,9 +107,9 @@ if __name__ == '__main__':
     elif args.dataset == 'decathalon':
         from downloader import download_decathalon
         download_decathalon()
-        paths = {'train':  os.path.join('Data', 'decathlon', 'train'), 
+        paths = {'train':  os.path.join('Data', 'decathlon', 'train'),
                  'val': os.path.join('Data', 'decathlon', 'val')}
-    else: 
+    else:
         raise ValueError(f'Invalid dataset name {args.dataset}')
 
     # initialise the data module
@@ -100,8 +120,9 @@ if __name__ == '__main__':
         shot = args.shot,
         num_workers = args.num_workers,
         cache = args.cache,
+        subepoch_factor=args.subepoch_factor
         )
-    
+
     # for the learning rate scheduler
     datamodule.setup('fit')
     steps_per_epoch = len(datamodule.train_dataloader())
@@ -135,9 +156,8 @@ if __name__ == '__main__':
 
     # run the given mode
     if args.mode == 'train':
-        trainer.fit(model, datamodule)
+        trainer.fit(model, datamodule, ckpt_path = checkpoint_path)
     elif args.mode == 'test':
-        trainer.test(model, datamodule)
+        trainer.test(model, datamodule, ckpt_path = checkpoint_path)
     else:
         raise ValueError(f'Invalid mode {args.mode}')
-    
