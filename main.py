@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--cache', action='store_true')
     parser.add_argument('--model_name', type=str)
     parser.add_argument('--subepoch_factor', type=int, default=2)
-    parser.add_argumetn('--load_version', type=int) #which version to load, if unspecified creates new model
+    parser.add_argumetn('--load', action='store_true')
     args = parser.parse_args()
 
     def get_model_name(args):
