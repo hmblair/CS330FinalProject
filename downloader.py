@@ -3,8 +3,7 @@
 from tqdm import tqdm
 import requests
 import os 
-import zipfile
-import tarfile 
+
 import shutil
 import warnings
 
@@ -27,6 +26,29 @@ def downloader_with_progress(url, filename):
         print("ERROR, something went wrong")
 
 
+import zipfile
+import tarfile 
+def unarchive(input_file : str, output_file : str):
+    filetype = input_file.split('.')[-1]
+    if input_file.endswith("tar"):
+        with tarfile.open(input_file, "r:") as tar:
+            tar.extractall(output_file)
+    elif input_file.endswith("tar.gz") or input_file.endswith("tgz"):
+        with tarfile.open(input_file, "r:gz") as tar:
+            tar.extractall(output_file)
+    elif input_file.endswith("tar.bz2") or input_file.endswith("tbz"):
+        with tarfile.open(input_file, "r:bz2") as tar:
+            tar.extractall(output_file)
+    elif input_file.endswith("tar.xz") or input_file.endswith("txz"):
+        with tarfile.open(input_file, "r:xz") as tar:
+            tar.extractall(output_file)
+    elif input_file.endswith("zip"):
+        with zipfile.ZipFile(input_file, 'r') as zip_ref:
+            zip_ref.extractall(output_file)
+    else:
+        raise OSError(f'Could not extract {input_file} as no appropriate extractor for the filetype "{filetype}" is found.')
+
+
 def download_imagenet_tiny():
     # download the dataset
     zipped_file = 'Data/tiny-imagenet-200.zip'
@@ -43,7 +65,6 @@ def download_imagenet_tiny():
     # extract only the train dataset
     if not os.path.exists('Data/imagenet-tiny'):
         shutil.move('Data/tiny-imagenet-200/train', 'Data/imagenet-tiny')
-
 
 
 def download_decathalon():
@@ -64,7 +85,6 @@ def download_decathalon():
         shutil.move('Data/imagenet12', 'Data/decathlon')
 
 
-
 def download_indoor_scenes():
     # download the dataset
     zipped_file = 'Data/indoorCVPR_09.tar'
@@ -81,7 +101,6 @@ def download_indoor_scenes():
     # rename the dataset
     if not os.path.exists('Data/indoor_scenes'):
         shutil.move('Data/Images', 'Data/indoor_scenes')
-
 
 
 def download_fruits():
@@ -101,6 +120,22 @@ def download_fruits():
     if not os.path.exists('Data/fruits'):
         shutil.move('Data/fruits-360/Training', 'Data/fruits')
 
+
+def downloader(dataset_name : str):
+    if dataset_name == 'imagenet-tiny':
+        download_imagenet_tiny()
+        return os.path.join('Data', 'imagenet-tiny')
+    elif dataset_name == 'decathlon':
+        download_decathalon()
+        return os.path.join('Data', 'decathlon')
+    elif dataset_name == 'indoor_scenes':
+        download_indoor_scenes()
+        return os.path.join('Data', 'indoor_scenes')
+    elif dataset_name == 'fruits':
+        download_fruits()
+        return os.path.join('Data', 'fruits')
+    else:
+        raise ValueError(f'Invalid dataset name {dataset_name}')
     
 
 
