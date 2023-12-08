@@ -25,9 +25,9 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', type=str, default='gpu')
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache', action='store_true')
-    parser.add_argument('--model_folder', type=str)
     parser.add_argument('--model_name', type=str)
     parser.add_argument('--subepoch_factor', type=int, default=2)
+    parser.add_argumetn('--load_version', type=int) #which version to load, if unspecified creates new model
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -62,15 +62,19 @@ if __name__ == '__main__':
     else:
         model_name = args.model_name
 
-    #if no loading folder specified, create path
-    if not args.model_folder:
+    model_folder = os.path.join(log_dir, model_name)
+
+    #if not loading, setup for new model creation.
+    if not args.load:
         checkpoint_path = None
-        model_folder = os.path.join(log_dir, model_name)
 
     #else setup for model loading
     else:
         checkpoint_path = os.path.join(args.model_folder, 'checkpoints', 'last.ckpt')
-        model_folder = args.model_folder
+        ans = input("Loading will rewrite the model checkpoints upon further training.\n" +
+                    "If you wish to save previous checkpoints, duplicate the model folder.\n"
+                    "Enter y to continue"):
+        assert(ans == 'y')
 
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
 
@@ -80,6 +84,7 @@ if __name__ == '__main__':
         monitor='val_loss',
         mode='min',
         save_last=True,
+        enable_version_counter = False
         )
 
     trainer = pl.Trainer(
@@ -89,17 +94,6 @@ if __name__ == '__main__':
         logger = logger,
         callbacks = [model_checkpoint],
         )
-
-        # initialise the logger and checkpoint callback
-    #     log_dir = os.path.dirname(args.model_folder)
-    #     model_name = os.path.basename(args.model_folder)
-    #     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
-    #
-    # initialise the trainer
-
-
-
-
 
     # get the data path
     if args.dataset == 'imagenet-tiny':
