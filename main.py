@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--cache', action='store_true')
     parser.add_argument('--model_name', type=str)
     parser.add_argument('--subepoch_factor', type=int, default=2)
-    parser.add_argument('--load', action='store_true')
+    parser.add_argument('--load_version', type=int)
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -65,15 +65,17 @@ if __name__ == '__main__':
     model_folder = os.path.join(log_dir, model_name)
 
     #if not loading, setup for new model creation.
-    if not args.load:
+    if not args.load_version:
         checkpoint_path = None
 
     #else setup for model loading
     else:
-        checkpoint_path = os.path.join(model_folder, 'checkpoints', 'last.ckpt')
-        ans = input("Loading will rewrite the model checkpoints, for the model {}.\n".format(args.model_name) +
-                    "If you wish to save previous checkpoints, duplicate the model folder.\n"
-                    "Enter y to continue:")
+        if args.load_version == 0:
+            path_end = 'last.ckpt'
+        else:
+            path_end = 'last-v{}.ckpt'.format(args.load_version)
+
+        checkpoint_path = os.path.join(model_folder, 'checkpoints', path_end)
         assert(ans == 'y')
 
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
@@ -84,7 +86,6 @@ if __name__ == '__main__':
         monitor='val_loss',
         mode='min',
         save_last=True,
-        enable_version_counter = False
         )
 
     trainer = pl.Trainer(
