@@ -76,7 +76,7 @@ if __name__ == '__main__':
             path_end = 'last-v{}.ckpt'.format(args.load_version)
 
         checkpoint_path = os.path.join(model_folder, 'checkpoints', path_end)
-        assert(ans == 'y')
+        print("loading version {} from model {}".format(args.load_version, model_name))
 
     logger = TensorBoardLogger(log_dir, name=model_name, version=0)
 
