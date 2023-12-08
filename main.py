@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--cache', action='store_true')
     parser.add_argument('--model_name', type=str)
     parser.add_argument('--subepoch_factor', type=int, default=2)
-    parser.add_argument('--load_version', type=int)
+    parser.add_argument('--load_version', type=int, default=-1)
     args = parser.parse_args()
 
     def get_model_name(args):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     model_folder = os.path.join(log_dir, model_name)
 
     #if not loading, setup for new model creation.
-    if not args.load_version:
+    if args.load_version < 0:
         checkpoint_path = None
 
     #else setup for model loading
