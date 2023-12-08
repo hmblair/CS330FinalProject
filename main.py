@@ -71,7 +71,7 @@ if __name__ == '__main__':
     #else setup for model loading
     else:
         checkpoint_path = os.path.join(model_folder, 'checkpoints', 'last.ckpt')
-        ans = input("Loading will rewrite the model checkpoints upon further training.\n" +
+        ans = input("Loading will rewrite the model checkpoints, for the model {}.\n".format(args.model_name) +
                     "If you wish to save previous checkpoints, duplicate the model folder.\n"
                     "Enter y to continue:")
         assert(ans == 'y')
