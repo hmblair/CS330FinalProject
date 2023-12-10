@@ -34,7 +34,7 @@ if __name__ == '__main__':
         """
         Returns a string summary of the model and its hyperparameters.
         """
-        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache', 'load_version']
+        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache', 'load_version', 'subepoch_factor']
         return '_'.join(
             [str(getattr(args, arg))
                 for arg in vars(args)
