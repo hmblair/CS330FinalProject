@@ -34,7 +34,7 @@ if __name__ == '__main__':
         """
         Returns a string summary of the model and its hyperparameters.
         """
-        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache']
+        ignore_args = ['accelerator', 'batch_size', 'num_workers', 'mode', 'cache', 'load_version']
         return '_'.join(
             [str(getattr(args, arg))
                 for arg in vars(args)
@@ -42,20 +42,8 @@ if __name__ == '__main__':
                 and arg not in ignore_args
             ]
                 )
-
-    ## Priority:
-    ## TODO: pass through random clip vectors to see hw it performs (Bhargav)
-    ## TODO: Try using diffrent CLIP models (Hamish)
-    ## TODO: Try a different LR scheduler (it must decrease significantly by 30 epochs or so) (Hamish)
-    ## TODO: See what happens with CLIP only, and no encoder (Henry) (Change trainer.fit to trainer.test)
-    ## TODO: Start making the poster in Google Slides (Henry)
-
-    ## Lower priority
-    ## TODO: Make the dataloader deterministic (so it loops over the entire dataset exactly once per epoch) (Hamish)
-    ## TODO: Make the dataset work with multiple GPUS (Hamish)
-
+    
     log_dir = 'lightning_logs'
-
     #take model name from arguments, or if not specified create one.
     if not args.model_name:
         model_name = get_model_name(args)
