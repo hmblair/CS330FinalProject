@@ -24,6 +24,7 @@ python3 main.py \
     --shot 2 \
     --dataset decathalon \
     --num_workers 0 \
+    --subepoch_factor 16
 
 To test a model on a the fruits dataset, create a folder [MODEL_FOLDER] in the main
 directory, and place the log associated to the model in [MODEL_FOLDER]. You
@@ -38,3 +39,11 @@ python3 test.py \
     --num_workers 1
 
 You can also test your model on the dataset indoor_scenes.
+
+Datasets are automatically downloaded. If you would like to download them without
+initializing a training or test run, you can run individual functions
+in the file downloader.py. For example, if you want to download the fruits
+dataset, you can run the following python code from the main directory:
+
+from downloader import download_fruits
+download_fruits()
