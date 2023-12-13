@@ -2,7 +2,17 @@ Class-Scalable In-Context Meta-Learning.
 
 Setup:
 
-This project uses Python 3.11. To install the requirements with pip, run
+This project uses Python 3.11. To make a new anaconda environment with Python 3.11, from the command line run
+
+```
+conda create --name myenv python=3.11
+```
+Activate the environment with
+```
+conda activate myenv
+```
+
+To install the requirements with pip, run
 
 ```
 pip install -r requirements.txt
@@ -27,7 +37,8 @@ python3 main.py \
     --shot 2 \
     --dataset decathalon \
     --num_workers 0 \
-    --subepoch_factor 16
+    --subepoch_factor 16 \
+    --accelerator cpu
 ```
 
 To test a model on dataset, create a folder [MODEL_FOLDER] in the main
@@ -44,6 +55,7 @@ python3 test.py \
     --shot 1 5 10 \
     --dataset fruits \
     --num_workers 1
+    --accelerator cpu
 ```
 
 You can also test your model on the dataset indoor_scenes. Replace the dataset argument with 
